@@ -1,0 +1,5 @@
+{
+  "name": "CoreConvert",
+  "description": "A powerful local file conversion utility for images and data formats using modern web APIs.",
+  "requestFramePermissions": []
+}
