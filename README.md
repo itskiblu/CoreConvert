@@ -73,4 +73,4 @@ Your data belongs to you.
 
 ---
 
-*Built with AI and my hands*
+*Built with AI and my hands.*
