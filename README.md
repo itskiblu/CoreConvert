@@ -73,4 +73,4 @@ Your data belongs to you.
 
 ---
 
-*Built with <3 and lots of caffeine.*
+*Built with AI and my hands*
