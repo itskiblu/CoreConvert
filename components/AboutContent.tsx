@@ -106,7 +106,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
 
         <footer className="pt-8 border-t-2 border-dashed border-black dark:border-white/20 text-center">
           <p className="text-xs font-black uppercase text-gray-500 tracking-[0.1em]">
-            Transparency is our default setting. For any further questions, view our open-source repository.
+            Transparency is our default setting. For any further questions, view our <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="underline hover:text-black dark:hover:text-white">open-source repository</a>.
           </p>
         </footer>
       </div>
