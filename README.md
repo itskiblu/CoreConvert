@@ -1,6 +1,6 @@
 # CORECONVERT
 
-> **RAW UTILITY. LOCAL CONVERSION. TOTAL CONTROL.**
+> **RAW UTILITY. ZERO CLOUD. TOTAL CONTROL.**
 
 **CoreConvert** is a powerful, local-first file conversion utility built for the modern web. It adheres to a strict "Privacy by Default" philosophy: your data never leaves your device. By leveraging advanced browser APIs (Canvas, Web Audio, MediaRecorder), CoreConvert performs professional-grade transformations entirely within the client's memory.
 
@@ -73,4 +73,4 @@ Your data belongs to you.
 
 ---
 
-*Built with AI and my hands.*
+*Built with <3 and lots of caffeine.*

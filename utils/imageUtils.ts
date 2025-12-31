@@ -2,6 +2,8 @@
 /**
  * Wraps PNG data in an ICO container. 
  * ICO format: Header (6 bytes) + Directory Entry (16 bytes) + Image Data.
+ * This manually constructs the binary data required for a valid .ico file
+ * without needing an external library.
  */
 async function wrapPngAsIco(pngBlob: Blob): Promise<Blob> {
   const pngBuffer = await pngBlob.arrayBuffer();
@@ -37,6 +39,16 @@ async function wrapPngAsIco(pngBlob: Blob): Promise<Blob> {
   return new Blob([header, entry, pngData], { type: 'image/x-icon' });
 }
 
+/**
+ * Primary image conversion utility.
+ * Uses the HTML5 Canvas API to draw the source image and export it
+ * as the desired MIME type.
+ * 
+ * @param file Source file or blob
+ * @param targetMimeType Mime type to export canvas as (e.g. image/jpeg)
+ * @param grayscale Apply CSS filter for grayscale processing
+ * @param quality Quality argument for lossy formats (0 to 1)
+ */
 export async function convertImage(
   file: File | Blob, 
   targetMimeType: string, 
@@ -55,6 +67,7 @@ export async function convertImage(
       const canvas = document.createElement('canvas');
       const isIco = targetMimeType === 'image/x-icon' || targetMimeType === 'image/vnd.microsoft.icon';
       
+      // Force standard favicon size if converting to ICO
       if (isIco) {
         canvas.width = 32;
         canvas.height = 32;
@@ -75,7 +88,7 @@ export async function convertImage(
       
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
-      // We always encode as PNG first if target is ICO, then wrap it.
+      // We always encode as PNG first if target is ICO, then wrap it manually.
       const encodingMime = isIco ? 'image/png' : targetMimeType;
 
       canvas.toBlob(async (blob) => {
@@ -103,7 +116,8 @@ export async function convertImage(
 }
 
 /**
- * Handle Apple's HEIC format using heic2any
+ * Handle Apple's HEIC format using heic2any library (loaded via CDN).
+ * Decodes the proprietary container into a standard Blob.
  */
 export async function convertHeic(file: File, targetMimeType: string): Promise<Blob> {
   // @ts-ignore - heic2any is loaded via script tag
@@ -121,17 +135,23 @@ export async function convertHeic(file: File, targetMimeType: string): Promise<B
   return blob;
 }
 
+/**
+ * Converts Scalable Vector Graphics (SVG) to raster images (PNG, JPG, etc).
+ * It loads the SVG as a data URI into an Image element, then draws to Canvas.
+ */
 export async function convertSvg(file: File, targetMimeType: string): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const svgText = e.target?.result as string;
       const img = new Image();
+      // Explicitly set charset to ensure proper parsing
       const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(svgBlob);
       
       img.onload = () => {
         const canvas = document.createElement('canvas');
+        // Scale up by 2x for crisper rasterization on high-DPI screens
         const scale = 2;
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
@@ -140,6 +160,7 @@ export async function convertSvg(file: File, targetMimeType: string): Promise<Bl
           reject(new Error('Canvas context failed'));
           return;
         }
+        // JPEG requires a white background, otherwise transparency becomes black
         ctx.fillStyle = targetMimeType === 'image/jpeg' ? 'white' : 'transparent';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -157,6 +178,10 @@ export async function convertSvg(file: File, targetMimeType: string): Promise<Bl
   });
 }
 
+/**
+ * Wraps a standard image (JPG, PNG) inside an SVG container.
+ * Useful for embedding raster images in vector contexts.
+ */
 export async function imageToSvg(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

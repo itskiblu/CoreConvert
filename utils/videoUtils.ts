@@ -1,4 +1,8 @@
 
+/**
+ * Captures a specific frame from a video file.
+ * Creates a hidden video element, seeks to a timestamp, and draws it to a Canvas.
+ */
 export async function takeVideoSnapshot(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -8,6 +12,7 @@ export async function takeVideoSnapshot(file: File): Promise<Blob> {
     const url = URL.createObjectURL(file);
     video.src = url;
 
+    // Seek to 0.5s to ensure we don't get a black frame at the very start
     video.onloadedmetadata = () => {
       video.currentTime = Math.min(video.duration, 0.5);
     };
@@ -38,7 +43,15 @@ export async function takeVideoSnapshot(file: File): Promise<Blob> {
 
 /**
  * Generic Video Converter using MediaRecorder.
- * Supports scaling via Canvas processing.
+ * 
+ * Strategy:
+ * 1. Play the source video in a hidden HTMLVideoElement.
+ * 2. Draw every frame to an HTMLCanvasElement using requestAnimationFrame.
+ * 3. Capture the Canvas stream + Audio Track.
+ * 4. Feed that stream into a MediaRecorder with the desired MIME type (codec).
+ * 
+ * This effectively "screen records" the video element to create a new file,
+ * bypassing the need for heavy WASM libraries like FFmpeg for simple container swaps.
  */
 export async function convertVideo(
   file: File,
@@ -101,7 +114,7 @@ export async function convertVideo(
         }
       }
 
-      // Determine best available mime type
+      // Determine best available mime type supported by the browser
       const possibleTypes = [
         options.targetMime,
         'video/quicktime',
@@ -127,7 +140,7 @@ export async function convertVideo(
 
       const recorder = new MediaRecorder(canvasStream, {
         mimeType: selectedMime,
-        videoBitsPerSecond: 2500000 // 2.5 Mbps
+        videoBitsPerSecond: 2500000 // 2.5 Mbps bitrate target
       });
 
       const chunks: Blob[] = [];
@@ -146,7 +159,7 @@ export async function convertVideo(
         }
       };
 
-      // Animation loop to draw video to canvas
+      // Animation loop to draw video frames to canvas
       let requestIdx: number;
       const drawFrame = () => {
         if (video.paused || video.ended) return;
@@ -159,6 +172,7 @@ export async function convertVideo(
         recorder.stop();
       };
 
+      // Start recording once video is ready to play
       video.oncanplaythrough = () => {
         recorder.start();
         video.play().then(() => {

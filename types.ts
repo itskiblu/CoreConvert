@@ -1,4 +1,11 @@
 
+/**
+ * Represents the current lifecycle state of a file within the application.
+ * IDLE: File added but not started.
+ * PROCESSING: Currently being converted.
+ * COMPLETED: Conversion successful, download ready.
+ * FAILED: Error occurred during processing.
+ */
 export enum ConversionStatus {
   IDLE = 'IDLE',
   PROCESSING = 'PROCESSING',
@@ -6,6 +13,10 @@ export enum ConversionStatus {
   FAILED = 'FAILED'
 }
 
+/**
+ * Union type representing all supported conversion operations.
+ * These keys map directly to specific logic paths in App.tsx.
+ */
 export type ConversionType = 
   // Images
   | 'IMAGE_TO_PNG' 
@@ -78,22 +89,29 @@ export type ConversionType =
   | 'AI_AUDIO_TO_TEXT'
   | 'AI_VIDEO_TO_TEXT';
 
+/**
+ * The core data structure for a file card in the UI.
+ * Contains both the original file and the result (if completed).
+ */
 export interface FileItem {
-  id: string;
-  file: File;
-  previewUrl?: string;
+  id: string; // Unique identifier for React lists
+  file: File; // The original input file object
+  previewUrl?: string; // Blob URL for thumbnail generation
   status: ConversionStatus;
-  progress: number;
-  resultUrl?: string;
-  resultName?: string;
-  error?: string;
-  type: ConversionType;
-  smartPrompt?: string; // For AI tasks
+  progress: number; // 0 to 100 integer
+  resultUrl?: string; // Blob URL for the converted file download
+  resultName?: string; // Proposed filename for the download
+  error?: string; // Error message if status === FAILED
+  type: ConversionType; // The currently selected target conversion
+  smartPrompt?: string; // For future AI capabilities
 }
 
+/**
+ * Configuration object for filling the dropdown menus.
+ */
 export interface ConversionOption {
   value: ConversionType;
-  label: string;
+  label: string; // Display text
   category: 'Image' | 'Data' | 'Text' | 'Audio' | 'Video' | 'Utility' | 'AI' | 'Document';
-  isSupported: (file: File) => boolean;
+  isSupported: (file: File) => boolean; // Filter function to show relevant options only
 }

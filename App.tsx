@@ -33,12 +33,18 @@ interface Notification {
   type?: 'success' | 'alert';
 }
 
+/**
+ * Main Application Component
+ * Handles global state, file management, and routing to utility functions.
+ */
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'privacy' | 'terms' | 'about'>('home');
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isZipping, setIsZipping] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unsupportedFileName, setUnsupportedFileName] = useState<string | null>(null);
+  
+  // Initialize dark mode from localStorage
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('core-dark-mode');
@@ -49,6 +55,7 @@ export default function App() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Apply dark mode class to HTML root
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) {
@@ -73,6 +80,10 @@ export default function App() {
     }, 2000);
   }, [removeNotification]);
 
+  /**
+   * Handles incoming files from the file picker.
+   * Scans MIME types to determine initial supported conversion types.
+   */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []) as File[];
     const validFiles: FileItem[] = [];
@@ -81,6 +92,7 @@ export default function App() {
       const name = file.name.toLowerCase();
       const mime = file.type.toLowerCase();
 
+      // Detection Logic
       const isPng = mime === 'image/png' || name.endsWith('.png');
       const isJpg = mime === 'image/jpeg' || mime === 'image/jpg' || name.endsWith('.jpg') || name.endsWith('.jpeg');
       const isHeicFile = name.endsWith('.heic') || name.endsWith('.heif');
@@ -109,6 +121,7 @@ export default function App() {
       let defaultType: ConversionType = 'PASSTHROUGH';
       let previewUrl: string | undefined = undefined;
 
+      // Determine default conversion suggestion based on input type
       if (isHeicFile) {
         defaultType = 'HEIC_TO_PNG';
       }
@@ -125,6 +138,7 @@ export default function App() {
       }
       else if (isPdf) {
         defaultType = 'PDF_TO_PNG';
+        // Generate PDF thumbnail
         previewUrl = await getPdfPreview(file);
       }
       else if (isAudio) {
@@ -163,6 +177,7 @@ export default function App() {
   const removeFile = (id: string) => {
     setFiles(prev => {
       const item = prev.find(f => f.id === id);
+      // Clean up blob URLs to prevent memory leaks
       if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
       if (item?.resultUrl) URL.revokeObjectURL(item.resultUrl);
       return prev.filter(f => f.id !== id);
@@ -173,6 +188,11 @@ export default function App() {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, type } : f));
   };
 
+  /**
+   * Core Logic Switch.
+   * Routes the conversion request to the appropriate utility function
+   * based on the selected ConversionType.
+   */
   const processConversion = async (id: string) => {
     const item = files.find(f => f.id === id);
     if (!item || item.status === ConversionStatus.PROCESSING) return;
@@ -184,6 +204,7 @@ export default function App() {
       let resultExtension = '';
 
       switch (item.type) {
+        // --- Image Operations ---
         case 'HEIC_TO_PNG':
         case 'HEIC_TO_JPG': {
           const mime = item.type === 'HEIC_TO_PNG' ? 'image/png' : 'image/jpeg';
@@ -226,6 +247,8 @@ export default function App() {
           resultBlob = await imageToPdf(item.file);
           resultExtension = 'pdf';
           break;
+          
+        // --- Document Operations ---
         case 'TEXT_TO_PDF':
         case 'MARKDOWN_TO_PDF': {
           const text = await readFileAsText(item.file);
@@ -237,6 +260,8 @@ export default function App() {
           resultBlob = await pdfToImage(item.file);
           resultExtension = 'png';
           break;
+          
+        // --- Data Operations ---
         case 'XLSX_TO_JSON': {
           const jsonStr = await xlsxToJson(item.file);
           resultBlob = new Blob([jsonStr], { type: 'application/json' });
@@ -267,11 +292,13 @@ export default function App() {
           const safeBaseName = item.file.name.split('.')[0].replace(/[^a-z0-9]/gi, '_').toLowerCase();
           let intermediateJson: string;
 
+          // Normalize everything to JSON first
           if (item.file.name.endsWith('.csv')) intermediateJson = csvToJson(rawText);
           else if (item.file.name.endsWith('.yaml') || item.file.name.endsWith('.yml')) intermediateJson = yamlToJson(rawText);
           else if (item.file.name.endsWith('.xml')) intermediateJson = xmlToJson(rawText);
           else intermediateJson = rawText; 
 
+          // Convert JSON to target
           let finalContent: string;
           if (item.type.endsWith('_TO_CSV')) {
             finalContent = jsonToCsv(intermediateJson);
@@ -292,6 +319,8 @@ export default function App() {
           resultBlob = new Blob([finalContent], { type: 'text/plain' });
           break;
         }
+
+        // --- Audio Operations ---
         case 'AUDIO_TO_MP3':
         case 'VIDEO_TO_MP3': {
           const buffer = await decodeAudio(item.file);
@@ -305,6 +334,8 @@ export default function App() {
           resultExtension = 'wav';
           break;
         }
+
+        // --- Video Operations ---
         case 'VIDEO_TO_WEBM': {
           resultBlob = await convertVideo(item.file, { targetMime: 'video/webm' }, (p) => {
             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
@@ -324,6 +355,8 @@ export default function App() {
           resultExtension = 'png';
           break;
         }
+        
+        // --- Utilities ---
         case 'MARKDOWN_TO_HTML': {
           const text = await readFileAsText(item.file);
           const html = markdownToHtml(text);
@@ -379,6 +412,7 @@ export default function App() {
           progress: 100,
           resultUrl: url,
           resultName: newName,
+          // Update preview for image results to show the converted result
           previewUrl: (resultExtension === 'png' || resultExtension === 'jpg' || resultExtension === 'webp' || resultExtension === 'bmp' || resultExtension === 'ico') ? url : f.previewUrl,
           file: new File([resultBlob!], newName, { type: resultBlob!.type })
         } : f));
@@ -398,6 +432,9 @@ export default function App() {
     files.filter(f => f.status === ConversionStatus.IDLE).forEach(f => processConversion(f.id));
   };
 
+  /**
+   * Zips all completed files into a single download archive.
+   */
   const downloadAll = async () => {
     const completedFiles = files.filter(f => f.status === ConversionStatus.COMPLETED);
     if (completedFiles.length === 0) return;
@@ -463,6 +500,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Unsupported File Modal Overlay */}
       {unsupportedFileName && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow p-6 md:p-10 max-w-md w-full relative">
@@ -502,6 +540,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Header Bar */}
       <header className="mb-8 md:mb-14 flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
         <a 
           href="#home"
@@ -540,8 +579,11 @@ export default function App() {
         </div>
       </header>
 
+      {/* Routing Logic */}
       {currentView === 'home' && (
         <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center mb-12">
+          
+          {/* INPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col">
             <div className="flex items-center gap-3 mb-3">
               <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-1.5 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
@@ -600,6 +642,7 @@ export default function App() {
             </div>
           </section>
 
+          {/* ACTION CENTER */}
           <div className="flex flex-col items-center justify-center py-1 lg:py-0 shrink-0">
              <button 
                onClick={convertAll}
@@ -615,6 +658,7 @@ export default function App() {
              </button>
           </div>
 
+          {/* OUTPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col">
             <div className="flex items-center gap-3 mb-3 justify-end">
               {completedCount > 1 && (
@@ -720,6 +764,7 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Toast Notifications */}
       <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
         {notifications.map(n => (
           <div 
