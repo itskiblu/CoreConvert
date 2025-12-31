@@ -477,7 +477,7 @@ export default function App() {
   };
 
   const getGlobalStatus = () => {
-    if (files.length === 0) return { label: 'EMPTY', color: 'text-gray-400 dark:text-gray-600' };
+    if (files.length === 0) return { label: 'IDLE', color: 'text-gray-400 dark:text-gray-600' };
     if (files.some(f => f.status === ConversionStatus.PROCESSING)) return { label: 'BUSY', color: 'text-brutalYellow' };
     if (files.every(f => f.status === ConversionStatus.COMPLETED || f.status === ConversionStatus.FAILED)) return { label: 'DONE', color: 'text-green-500 dark:text-green-400' };
     return { label: 'READY', color: 'text-blue-500 dark:text-blue-300' };
