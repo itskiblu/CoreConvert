@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import JSZip from 'jszip';
 import { FileItem, ConversionStatus, ConversionType } from './types';
@@ -485,6 +484,12 @@ export default function App() {
   };
 
   const globalStatus = getGlobalStatus();
+
+  // Update title based on status
+  useEffect(() => {
+    document.title = `CoreConvert | ${globalStatus.label}`;
+  }, [globalStatus.label]);
+
   const inputFiles = files.filter(f => f.status === ConversionStatus.IDLE);
   const outputFiles = files.filter(f => f.status !== ConversionStatus.IDLE);
   const completedCount = files.filter(f => f.status === ConversionStatus.COMPLETED).length;
