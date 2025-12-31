@@ -522,7 +522,7 @@ export default function App() {
             </p>
             <div className="flex flex-col gap-3">
               <a 
-                href="https://github.com" 
+                href="https://github.com/itskiblu/CoreConvert" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm p-3 font-black text-center text-xs uppercase tracking-widest hover:brightness-105 transition-all outline-none"
@@ -753,7 +753,7 @@ export default function App() {
               >
                 Terms
               </button>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-black dark:text-white uppercase hover:underline decoration-2 px-2">GitHub</a>
+              <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-black dark:text-white uppercase hover:underline decoration-2 px-2">GitHub</a>
             </nav>
             <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm p-2 px-3">
               <span className="text-[10px] font-black text-black dark:text-white uppercase tracking-tighter">
