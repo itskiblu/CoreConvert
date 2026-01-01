@@ -1,17 +1,20 @@
 
+import { loadScript } from './scriptLoader';
+
 /**
  * lamejs is a port of the LAME MP3 encoder. 
  * Because it's an older codebase, it relies on its internal classes/constants 
  * being available in the global scope. We load it via a script tag in index.html
  * to ensure it works correctly in its own non-strict global context.
  */
-const getLameJS = () => {
+async function getLameJS() {
+  await loadScript('lamejs');
   const lj = (window as any).lamejs;
   if (!lj) {
     throw new Error("lamejs library not loaded. Please check your internet connection.");
   }
   return lj;
-};
+}
 
 /**
  * Utility to convert AudioBuffer to a WAV blob.
@@ -94,7 +97,7 @@ export async function audioBufferToWav(buffer: AudioBuffer, mono: boolean = fals
  * Encodes raw PCM data into MP3 frames.
  */
 export async function audioBufferToMp3(buffer: AudioBuffer, kbps: number = 128): Promise<Blob> {
-  const lamejs = getLameJS();
+  const lamejs = await getLameJS();
   const channels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
   

@@ -1,6 +1,9 @@
 
 // @ts-nocheck - jspdf and pdfjs are loaded via script tags
+import { loadScript } from './scriptLoader';
+
 export async function imageToPdf(file: File): Promise<Blob> {
+  await loadScript('jspdf');
   const { jsPDF } = window.jspdf;
   const imgData = await new Promise((resolve) => {
     const reader = new FileReader();
@@ -24,6 +27,7 @@ export async function imageToPdf(file: File): Promise<Blob> {
 }
 
 export async function textToPdf(text: string, title: string = 'Document'): Promise<Blob> {
+  await loadScript('jspdf');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
   const margin = 20;
@@ -35,6 +39,7 @@ export async function textToPdf(text: string, title: string = 'Document'): Promi
 }
 
 export async function pdfToImage(file: File): Promise<Blob> {
+  await loadScript('pdfjs');
   const pdfjsLib = window['pdfjs-dist/build/pdf'];
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 

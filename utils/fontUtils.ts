@@ -1,5 +1,8 @@
 
+import { loadScript } from './scriptLoader';
+
 export async function fontToTtf(file: File): Promise<Blob> {
+    await loadScript('opentype');
     const buffer = await file.arrayBuffer();
     // @ts-ignore
     const opentype = window.opentype;
@@ -16,6 +19,7 @@ export async function fontToTtf(file: File): Promise<Blob> {
 }
 
 export async function fontToOtf(file: File): Promise<Blob> {
+    await loadScript('opentype');
     const buffer = await file.arrayBuffer();
     // @ts-ignore
     const opentype = window.opentype;
@@ -35,6 +39,8 @@ export async function fontToOtf(file: File): Promise<Blob> {
 }
 
 export async function fontToWoff(file: File): Promise<Blob> {
+    await loadScript('opentype');
+    await loadScript('pako');
     const buffer = await file.arrayBuffer();
     // @ts-ignore
     const opentype = window.opentype;
@@ -156,6 +162,7 @@ function ttfToWoffBytes(ttfBuffer: ArrayBuffer, pako: any): Uint8Array {
 }
 
 export async function fontToJson(file: File): Promise<Blob> {
+    await loadScript('opentype');
     const buffer = await file.arrayBuffer();
     // @ts-ignore
     const opentype = window.opentype;

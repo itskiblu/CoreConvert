@@ -1,6 +1,7 @@
 
-
 // @ts-nocheck - js-yaml and others are loaded via script tags
+import { loadScript } from './scriptLoader';
+
 export async function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -31,6 +32,7 @@ export function formatJson(jsonStr: string, indent: number = 2): string {
  * Excel Parsing using SheetJS
  */
 export async function xlsxToJson(file: File): Promise<string> {
+  await loadScript('xlsx');
   const data = await file.arrayBuffer();
   // @ts-ignore
   const workbook = XLSX.read(data);
@@ -42,6 +44,7 @@ export async function xlsxToJson(file: File): Promise<string> {
 }
 
 export async function xlsxToCsv(file: File): Promise<string> {
+  await loadScript('xlsx');
   const data = await file.arrayBuffer();
   // @ts-ignore
   const workbook = XLSX.read(data);
@@ -133,7 +136,8 @@ export function csvToJson(csvStr: string, delimiter: string = ','): string {
   return JSON.stringify(result, null, 2);
 }
 
-export function jsonToYaml(jsonStr: string): string {
+export async function jsonToYaml(jsonStr: string): Promise<string> {
+  await loadScript('jsyaml');
   try {
     const data = JSON.parse(jsonStr);
     return jsyaml.dump(data);
@@ -142,7 +146,8 @@ export function jsonToYaml(jsonStr: string): string {
   }
 }
 
-export function yamlToJson(yamlStr: string): string {
+export async function yamlToJson(yamlStr: string): Promise<string> {
+  await loadScript('jsyaml');
   try {
     const data = jsyaml.load(yamlStr);
     return JSON.stringify(data, null, 2);
@@ -218,7 +223,8 @@ export function jsonToXml(jsonStr: string): string {
   }
 }
 
-export function markdownToHtml(md: string): string {
+export async function markdownToHtml(md: string): Promise<string> {
+  await loadScript('marked');
   return marked.parse(md);
 }
 
@@ -226,6 +232,7 @@ export function markdownToHtml(md: string): string {
  * Uses Mammoth.js to convert DOCX to HTML
  */
 export async function docxToHtml(file: File): Promise<string> {
+   await loadScript('mammoth');
    const mammoth = (window as any).mammoth;
    if (!mammoth) throw new Error("Mammoth library not loaded");
    const buffer = await file.arrayBuffer();
@@ -234,6 +241,7 @@ export async function docxToHtml(file: File): Promise<string> {
 }
 
 export async function docxToText(file: File): Promise<string> {
+   await loadScript('mammoth');
    const mammoth = (window as any).mammoth;
    if (!mammoth) throw new Error("Mammoth library not loaded");
    const buffer = await file.arrayBuffer();
@@ -244,7 +252,8 @@ export async function docxToText(file: File): Promise<string> {
 /**
  * Uses Turndown to convert HTML to Markdown
  */
-export function htmlToMarkdown(html: string): string {
+export async function htmlToMarkdown(html: string): Promise<string> {
+    await loadScript('turndown');
     const TurndownService = (window as any).TurndownService;
     if (!TurndownService) throw new Error("Turndown library not loaded");
     const turndownService = new TurndownService();

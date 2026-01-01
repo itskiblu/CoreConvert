@@ -1,4 +1,5 @@
 
+import { loadScript } from './scriptLoader';
 
 /**
  * Wraps PNG data in an ICO container. 
@@ -121,6 +122,7 @@ export async function convertImage(
  * Decodes the proprietary container into a standard Blob.
  */
 export async function convertHeic(file: File, targetMimeType: string): Promise<Blob> {
+  await loadScript('heic2any');
   // @ts-ignore - heic2any is loaded via script tag
   const heic2any = window.heic2any;
   if (!heic2any) throw new Error("HEIC decoder not loaded");
@@ -140,6 +142,7 @@ export async function convertHeic(file: File, targetMimeType: string): Promise<B
  * Converts TIFF using UTIF.js
  */
 export async function convertTiff(file: File, targetMimeType: string): Promise<Blob> {
+  await loadScript('utif');
   // @ts-ignore
   const UTIF = window.UTIF;
   if (!UTIF) throw new Error("UTIF library not loaded");

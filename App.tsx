@@ -353,7 +353,7 @@ export default function App() {
         }
         case 'DOCX_TO_MARKDOWN': {
           const html = await docxToHtml(item.file);
-          const md = htmlToMarkdown(html);
+          const md = await htmlToMarkdown(html);
           resultBlob = new Blob([md], { type: 'text/markdown' });
           resultExtension = 'md';
           break;
@@ -396,7 +396,7 @@ export default function App() {
 
           if (item.file.name.endsWith('.csv')) intermediateJson = csvToJson(rawText);
           else if (item.file.name.endsWith('.tsv') || item.type.startsWith('TSV_')) intermediateJson = csvToJson(rawText, '\t');
-          else if (item.file.name.endsWith('.yaml') || item.file.name.endsWith('.yml')) intermediateJson = yamlToJson(rawText);
+          else if (item.file.name.endsWith('.yaml') || item.file.name.endsWith('.yml')) intermediateJson = await yamlToJson(rawText);
           else if (item.file.name.endsWith('.xml')) intermediateJson = xmlToJson(rawText);
           else intermediateJson = rawText; 
 
@@ -408,7 +408,7 @@ export default function App() {
             finalContent = jsonToCsv(intermediateJson, '\t');
             resultExtension = 'tsv';
           } else if (item.type.endsWith('_TO_YAML')) {
-            finalContent = jsonToYaml(intermediateJson);
+            finalContent = await jsonToYaml(intermediateJson);
             resultExtension = 'yaml';
           } else if (item.type.endsWith('_TO_XML')) {
             finalContent = jsonToXml(intermediateJson);
@@ -574,14 +574,14 @@ export default function App() {
         // --- Utilities ---
         case 'MARKDOWN_TO_HTML': {
           const text = await readFileAsText(item.file);
-          const html = markdownToHtml(text);
+          const html = await markdownToHtml(text);
           resultBlob = new Blob([html], { type: 'text/html' });
           resultExtension = 'html';
           break;
         }
         case 'HTML_TO_MARKDOWN': {
           const text = await readFileAsText(item.file);
-          const md = htmlToMarkdown(text);
+          const md = await htmlToMarkdown(text);
           resultBlob = new Blob([md], { type: 'text/markdown' });
           resultExtension = 'md';
           break;
