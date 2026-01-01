@@ -71,10 +71,17 @@ interface Notification {
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'privacy' | 'terms' | 'about'>('home');
   const [files, setFiles] = useState<FileItem[]>([]);
+  // Ref to keep track of files without causing re-renders in useCallback dependencies
+  const filesRef = useRef<FileItem[]>(files);
   const [isZipping, setIsZipping] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unsupportedFileName, setUnsupportedFileName] = useState<string | null>(null);
   
+  // Sync ref with state
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
   // Initialize dark mode from localStorage
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -113,7 +120,6 @@ export default function App() {
 
   /**
    * Handles incoming files from the file picker.
-   * Scans MIME types to determine initial supported conversion types.
    */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []) as File[];
@@ -146,7 +152,7 @@ export default function App() {
       const fileIsMd = isMd(file);
       const fileIsDocx = isDocx(file);
       const fileIsHtml = isHtml(file);
-      const fileIsText = isText(file); // fallback for generic text
+      const fileIsText = isText(file);
 
       const isRecognized = fileIsImage || fileIsHeic || fileIsTiff || fileIsSvg || fileIsPdf || fileIsAudio || fileIsVideo || fileIs3d || fileIsFont || fileIsJson || fileIsCsv || fileIsTsv || fileIsYaml || fileIsXml || fileIsXlsx || fileIsMd || fileIsDocx || fileIsHtml || fileIsText;
 
@@ -158,7 +164,7 @@ export default function App() {
       let defaultType: ConversionType = 'PASSTHROUGH';
       let previewUrl: string | undefined = undefined;
 
-      // Determine default conversion suggestion based on input type
+      // Determine default conversion suggestion
       if (fileIsHeic) {
         defaultType = 'HEIC_TO_PNG';
       }
@@ -178,11 +184,9 @@ export default function App() {
       }
       else if (fileIsPdf) {
         defaultType = 'PDF_TO_PNG';
-        // Generate PDF thumbnail
         previewUrl = await getPdfPreview(file);
       }
       else if (fileIsDocx) {
-        // Default to HTML or Text
         defaultType = 'DOCX_TO_HTML';
       }
       else if (fileIsAudio) {
@@ -231,27 +235,27 @@ export default function App() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const removeFile = (id: string) => {
+  const removeFile = useCallback((id: string) => {
     setFiles(prev => {
       const item = prev.find(f => f.id === id);
-      // Clean up blob URLs to prevent memory leaks
       if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
       if (item?.resultUrl) URL.revokeObjectURL(item.resultUrl);
       return prev.filter(f => f.id !== id);
     });
-  };
+  }, []);
 
-  const updateFileType = (id: string, type: ConversionType) => {
+  const updateFileType = useCallback((id: string, type: ConversionType) => {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, type } : f));
-  };
+  }, []);
 
   /**
    * Core Logic Switch.
    * Routes the conversion request to the appropriate utility function
    * based on the selected ConversionType.
    */
-  const processConversion = async (id: string) => {
-    const item = files.find(f => f.id === id);
+  const processConversion = useCallback(async (id: string) => {
+    // Read from ref to get the current state without adding 'files' dependency
+    const item = filesRef.current.find(f => f.id === id);
     if (!item || item.status === ConversionStatus.PROCESSING) return;
 
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: ConversionStatus.PROCESSING, progress: 10 } : f));
@@ -390,14 +394,12 @@ export default function App() {
           const safeBaseName = item.file.name.split('.')[0].replace(/[^a-z0-9]/gi, '_').toLowerCase();
           let intermediateJson: string;
 
-          // Normalize everything to JSON first
           if (item.file.name.endsWith('.csv')) intermediateJson = csvToJson(rawText);
           else if (item.file.name.endsWith('.tsv') || item.type.startsWith('TSV_')) intermediateJson = csvToJson(rawText, '\t');
           else if (item.file.name.endsWith('.yaml') || item.file.name.endsWith('.yml')) intermediateJson = yamlToJson(rawText);
           else if (item.file.name.endsWith('.xml')) intermediateJson = xmlToJson(rawText);
           else intermediateJson = rawText; 
 
-          // Convert JSON to target
           let finalContent: string;
           if (item.type.endsWith('_TO_CSV')) {
             finalContent = jsonToCsv(intermediateJson);
@@ -586,7 +588,6 @@ export default function App() {
         }
         case 'HTML_TO_TEXT': {
           const text = await readFileAsText(item.file);
-          // Simple strip tags
           const doc = new DOMParser().parseFromString(text, 'text/html');
           const plain = doc.body.textContent || "";
           resultBlob = new Blob([plain], { type: 'text/plain' });
@@ -674,7 +675,6 @@ export default function App() {
           progress: 100,
           resultUrl: url,
           resultName: newName,
-          // Update preview for image results to show the converted result
           previewUrl: (resultExtension === 'png' || resultExtension === 'jpg' || resultExtension === 'webp' || resultExtension === 'bmp' || resultExtension === 'ico' || resultExtension === 'avif') ? url : f.previewUrl,
           file: new File([resultBlob!], newName, { type: resultBlob!.type })
         } : f));
@@ -688,7 +688,7 @@ export default function App() {
         error: err.message || 'Error occurred.'
       } : f));
     }
-  };
+  }, []);
 
   const convertAll = () => {
     files.filter(f => f.status === ConversionStatus.IDLE).forEach(f => processConversion(f.id));
@@ -765,6 +765,9 @@ export default function App() {
         : 'text-black dark:text-white hover:underline decoration-2'
     }`;
   };
+
+  // Callback to trigger triggerNotification in child components
+  const onSuccessClick = useCallback(() => triggerNotification('success'), [triggerNotification]);
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
@@ -906,7 +909,7 @@ export default function App() {
                             onRemove={removeFile}
                             onConvert={processConversion}
                             onChangeType={updateFileType}
-                            onSuccessClick={() => triggerNotification('success')}
+                            onSuccessClick={onSuccessClick}
                           />
                         ))}
                       </div>
@@ -963,7 +966,7 @@ export default function App() {
                         onRemove={removeFile}
                         onConvert={processConversion}
                         onChangeType={updateFileType}
-                        onSuccessClick={() => triggerNotification('success')}
+                        onSuccessClick={onSuccessClick}
                       />
                     ))
                   ) : (

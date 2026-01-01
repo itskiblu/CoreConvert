@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { FileItem, ConversionStatus, ConversionType } from '../types';
@@ -12,7 +11,7 @@ interface ConversionCardProps {
   onSuccessClick?: () => void;
 }
 
-export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, onConvert, onChangeType, onSuccessClick }) => {
+const ConversionCardComponent: React.FC<ConversionCardProps> = ({ item, onRemove, onConvert, onChangeType, onSuccessClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownCoords, setDropdownCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -310,3 +309,5 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
     </div>
   );
 };
+
+export const ConversionCard = React.memo(ConversionCardComponent);
