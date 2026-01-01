@@ -770,21 +770,28 @@ export default function App() {
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
       {/* Unsupported File Modal Overlay */}
       {unsupportedFileName && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="unsupported-modal-title"
+        >
           <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow p-6 md:p-10 max-w-md w-full relative">
             <button 
               onClick={() => setUnsupportedFileName(null)}
               className="absolute top-4 right-4 text-black dark:text-white hover:rotate-90 transition-transform"
+              aria-label="Close modal"
             >
               <ICONS.X />
             </button>
             <button 
               onClick={() => triggerNotification('alert')}
               className="w-12 h-12 bg-red-500 neubrutal-border neubrutal-shadow-sm neubrutal-button-active flex items-center justify-center mb-6 outline-none"
+              aria-label="Trigger test alert"
             >
                <span className="text-white font-black text-2xl">!</span>
             </button>
-            <h3 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mb-2">Unsupported Type</h3>
+            <h3 id="unsupported-modal-title" className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mb-2">Unsupported Type</h3>
             <p className="text-sm font-bold text-gray-600 dark:text-gray-400 mb-6 uppercase leading-tight">
               The file <span className="text-black dark:text-white underline">{unsupportedFileName}</span> is not currently supported for deep conversion tasks.
             </p>
@@ -916,10 +923,11 @@ export default function App() {
                onClick={convertAll}
                disabled={inputFiles.length === 0}
                title="Run Conversion"
+               aria-label="Run all conversions"
                className={`p-4 md:p-6 neubrutal-trigger outline-none ${inputFiles.length === 0 ? 'opacity-20 grayscale cursor-not-allowed' : ''}`}
              >
                <div className="bg-black dark:bg-white text-brutalYellow dark:text-black p-4 md:p-5 neubrutal-shadow-sm neubrutal-target">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 md:w-10 md:h-10 rotate-90 lg:rotate-0">
+                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 md:w-10 md:h-10 rotate-90 lg:rotate-0">
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" />
                   </svg>
                </div>
@@ -1033,7 +1041,11 @@ export default function App() {
       </footer>
 
       {/* Toast Notifications */}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+      <div 
+        className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"
+        role="status" 
+        aria-live="polite"
+      >
         {notifications.map(n => (
           <div 
             key={n.id}

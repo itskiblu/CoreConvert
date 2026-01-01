@@ -147,6 +147,7 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
           zIndex: 9999 
         }}
         className="bg-white dark:bg-zinc-900 neubrutal-border max-h-60 overflow-y-auto custom-scrollbar shadow-2xl"
+        role="menu"
       >
         {availableOptions.length > 0 ? availableOptions.map((opt) => (
           <button
@@ -160,6 +161,7 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
                 ? 'bg-black text-brutalYellow' 
                 : 'text-black dark:text-white hover:bg-brutalYellow hover:text-black dark:hover:bg-brutalYellow dark:hover:text-black'
               }`}
+            role="menuitem"
           >
             <div className="flex items-center justify-between w-full">
               <span>{opt.label}</span>
@@ -167,7 +169,7 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
             </div>
           </button>
         )) : (
-          <div className="p-3 text-[9px] font-black uppercase text-gray-400 italic">No alternatives</div>
+          <div className="p-3 text-[9px] font-black uppercase text-gray-400 italic" role="menuitem" aria-disabled="true">No alternatives</div>
         )}
       </div>,
       document.body
@@ -185,7 +187,7 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
           <div className={`w-10 h-10 flex-shrink-0 bg-brutalYellow neubrutal-border overflow-hidden flex items-center justify-center relative`}>
             {activePreviewUrl ? (
               <>
-                <img src={activePreviewUrl} alt="Preview" className="w-full h-full object-cover" />
+                <img src={activePreviewUrl} alt={`Preview of ${item.file.name}`} className="w-full h-full object-cover" />
                 {isCompleted && (
                   <div className="absolute bottom-0 right-0 bg-black text-brutalYellow text-[6px] font-black px-1 uppercase border-l-2 border-t-2 border-black">
                     {displayExtension}
@@ -240,6 +242,9 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
               onClick={() => !isProcessing && !isCompleted && setIsDropdownOpen(!isDropdownOpen)}
               className={`w-full bg-white dark:bg-zinc-800 neubrutal-border text-[11px] font-black text-black dark:text-white uppercase p-1.5 px-2.5 flex items-center justify-between outline-none ${isProcessing || isCompleted ? 'cursor-not-allowed opacity-50' : 'hover:bg-brutalYellow hover:text-black dark:hover:bg-brutalYellow dark:hover:text-black hover:neubrutal-shadow-sm'}`}
               disabled={isProcessing || isCompleted}
+              aria-haspopup="true"
+              aria-expanded={isDropdownOpen}
+              aria-label="Select target format"
             >
               <div className="flex items-center gap-2">
                 <span>{selectedOption?.label || 'Select Task'}</span>
@@ -254,7 +259,14 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
         )}
 
         {isProcessing && (
-          <div className="w-full bg-white dark:bg-zinc-800 neubrutal-border h-3 overflow-hidden relative">
+          <div 
+            className="w-full bg-white dark:bg-zinc-800 neubrutal-border h-3 overflow-hidden relative" 
+            role="progressbar" 
+            aria-valuenow={Math.max(item.progress, 5)} 
+            aria-valuemin={0} 
+            aria-valuemax={100}
+            aria-label="Conversion progress"
+          >
             <div 
               className={`h-full bg-black dark:bg-white transition-all duration-300`} 
               style={{ width: `${Math.max(item.progress, 5)}%` }}
