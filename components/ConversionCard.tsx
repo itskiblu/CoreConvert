@@ -27,9 +27,14 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
     ? item.resultName.split('.').pop() 
     : item.file.name.split('.').pop();
 
-  const isAudioFile = item.file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(item.file.name);
+  const isAudioFile = item.file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac|m4r|opus)$/i.test(item.file.name);
   const isVideoFile = item.file.type.startsWith('video/') || /\.(mp4|webm|mov|avi|mkv)$/i.test(item.file.name);
   const isPdfFile = item.file.type === 'application/pdf' || item.file.name.toLowerCase().endsWith('.pdf');
+  const is3dFile = /\.(obj|stl|glb|gltf|ply)$/i.test(item.file.name);
+  const isFontFile = /\.(ttf|otf|woff|woff2)$/i.test(item.file.name);
+
+  // Helper for 3D icon which has a special key
+  const Icon3D = ICONS['3D'];
 
   const activePreviewUrl = (isCompleted && item.resultName?.match(/\.(png|jpe?g|webp|bmp|ico)$/i)) 
     ? item.resultUrl 
@@ -53,19 +58,39 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
       if (opt.value === 'IMAGE_TO_ICO' && (mime.includes('icon') || name.endsWith('.ico'))) return false;
       if (opt.value === 'IMAGE_TO_BMP' && (mime === 'image/bmp' || name.endsWith('.bmp'))) return false;
 
+      // Audio Redundancy Checks
       if (opt.value === 'AUDIO_TO_MP3' && (mime === 'audio/mpeg' || mime === 'audio/mp3' || name.endsWith('.mp3'))) return false;
       if (opt.value === 'AUDIO_TO_WAV' && (mime === 'audio/wav' || name.endsWith('.wav'))) return false;
+      if (opt.value === 'AUDIO_TO_OGG' && (mime === 'audio/ogg' || name.endsWith('.ogg'))) return false;
+      if (opt.value === 'AUDIO_TO_M4A' && (mime === 'audio/mp4' || name.endsWith('.m4a'))) return false;
+      if (opt.value === 'AUDIO_TO_WEBM' && (mime === 'audio/webm' || name.endsWith('.webm'))) return false;
+      if (opt.value === 'AUDIO_TO_FLAC' && (mime === 'audio/flac' || name.endsWith('.flac'))) return false;
+      if (opt.value === 'AUDIO_TO_AAC' && (mime === 'audio/aac' || name.endsWith('.aac'))) return false;
+      if (opt.value === 'AUDIO_TO_OPUS' && (mime.includes('opus') || name.endsWith('.opus'))) return false;
+      if (opt.value === 'AUDIO_TO_M4R' && (name.endsWith('.m4r'))) return false;
       
+      // Video Redundancy Checks
       if (opt.value === 'VIDEO_TO_MP4' && (mime === 'video/mp4' || name.endsWith('.mp4'))) return false;
       if (opt.value === 'VIDEO_TO_WEBM' && (mime === 'video/webm' || name.endsWith('.webm'))) return false;
       if (opt.value === 'VIDEO_TO_MOV' && (mime === 'video/quicktime' || name.endsWith('.mov'))) return false;
       if (opt.value === 'VIDEO_TO_MKV' && (mime === 'video/x-matroska' || name.endsWith('.mkv'))) return false;
       if (opt.value === 'VIDEO_TO_AVI' && (mime === 'video/x-msvideo' || name.endsWith('.avi'))) return false;
       
+      // 3D Redundancy
+      if (opt.value === 'OBJ_TO_STL' && name.endsWith('.stl')) return false;
+      if (opt.value === 'STL_TO_OBJ' && name.endsWith('.obj')) return false;
+      if (opt.value === 'GLB_TO_OBJ' && name.endsWith('.obj')) return false;
+      if (opt.value === 'GLB_TO_STL' && name.endsWith('.stl')) return false;
+
+      // Font Redundancy
+      if (opt.value === 'FONT_TO_TTF' && name.endsWith('.ttf')) return false;
+      if (opt.value === 'FONT_TO_OTF' && name.endsWith('.otf')) return false;
+      if (opt.value === 'FONT_TO_WOFF' && name.endsWith('.woff')) return false;
+
       if (opt.value === 'PDF_TO_PNG' && isPdfFile && isCompleted && item.resultName?.endsWith('.png')) return false;
 
       // 3. Category logic - ensure data tools don't show for images, etc.
-      const isDataFile = name.endsWith('.json') || name.endsWith('.csv') || name.endsWith('.yaml') || name.endsWith('.xml');
+      const isDataFile = name.endsWith('.json') || name.endsWith('.csv') || name.endsWith('.yaml') || name.endsWith('.xml') || name.endsWith('.tsv');
       if (opt.category === 'Data' && !isDataFile) return false;
 
       return true;
@@ -171,6 +196,10 @@ export const ConversionCard: React.FC<ConversionCardProps> = ({ item, onRemove, 
                <div className="text-black"><ICONS.Music /></div>
             ) : isVideoFile ? (
                <div className="text-black"><ICONS.Video /></div>
+            ) : is3dFile ? (
+               <div className="text-black"><Icon3D /></div>
+            ) : isFontFile ? (
+               <div className="text-black"><ICONS.Font /></div>
             ) : isPdfFile ? (
                <div className="text-black"><ICONS.Document /></div>
             ) : (

@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck - js-yaml and others are loaded via script tags
 export async function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -80,7 +81,7 @@ export function jsonToSql(jsonStr: string, tableName: string = 'imported_data'):
   }
 }
 
-export function jsonToCsv(jsonStr: string): string {
+export function jsonToCsv(jsonStr: string, delimiter: string = ','): string {
   try {
     const data = JSON.parse(jsonStr);
     const array = Array.isArray(data) ? data : [data];
@@ -92,8 +93,8 @@ export function jsonToCsv(jsonStr: string): string {
     }
 
     const headers = Object.keys(array[0]);
-    const csvRows = [];
-    csvRows.push(headers.join(','));
+    const rows = [];
+    rows.push(headers.join(delimiter));
     
     for (const row of array) {
       const values = headers.map(header => {
@@ -102,24 +103,24 @@ export function jsonToCsv(jsonStr: string): string {
         const escaped = ('' + val).replace(/"/g, '""');
         return `"${escaped}"`;
       });
-      csvRows.push(values.join(','));
+      rows.push(values.join(delimiter));
     }
-    return csvRows.join('\n');
+    return rows.join('\n');
   } catch (e) {
-    throw new Error(e.message || 'Invalid JSON for CSV conversion');
+    throw new Error(e.message || 'Invalid JSON for CSV/TSV conversion');
   }
 }
 
-export function csvToJson(csvStr: string): string {
+export function csvToJson(csvStr: string, delimiter: string = ','): string {
   const lines = csvStr.trim().split('\n');
   if (lines.length < 2) return "[]";
   
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
   const result = [];
   
   for (let i = 1; i < lines.length; i++) {
     const obj: any = {};
-    const currentLine = lines[i].split(',');
+    const currentLine = lines[i].split(delimiter);
     headers.forEach((header, index) => {
       let val = currentLine[index]?.trim().replace(/^"|"$/g, '') || "";
       if (!isNaN(val as any) && val !== "") obj[header] = Number(val);
@@ -219,4 +220,87 @@ export function jsonToXml(jsonStr: string): string {
 
 export function markdownToHtml(md: string): string {
   return marked.parse(md);
+}
+
+/**
+ * Uses Mammoth.js to convert DOCX to HTML
+ */
+export async function docxToHtml(file: File): Promise<string> {
+   const mammoth = (window as any).mammoth;
+   if (!mammoth) throw new Error("Mammoth library not loaded");
+   const buffer = await file.arrayBuffer();
+   const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
+   return result.value;
+}
+
+export async function docxToText(file: File): Promise<string> {
+   const mammoth = (window as any).mammoth;
+   if (!mammoth) throw new Error("Mammoth library not loaded");
+   const buffer = await file.arrayBuffer();
+   const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+   return result.value;
+}
+
+/**
+ * Uses Turndown to convert HTML to Markdown
+ */
+export function htmlToMarkdown(html: string): string {
+    const TurndownService = (window as any).TurndownService;
+    if (!TurndownService) throw new Error("Turndown library not loaded");
+    const turndownService = new TurndownService();
+    return turndownService.turndown(html);
+}
+
+/**
+ * Simple XML Formatting
+ */
+export function formatXml(xml: string, minify: boolean = false): string {
+    if (minify) {
+        return xml.replace(/>\s+</g, '><').trim();
+    }
+    
+    // Simple heuristic indentation
+    let formatted = '';
+    const reg = /(>)(<)(\/*)/g;
+    xml = xml.replace(reg, '$1\r\n$2$3');
+    let pad = 0;
+    const lines = xml.split('\r\n');
+    
+    lines.forEach(node => {
+        let indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+            indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+            if (pad !== 0) pad -= 1;
+        } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+            indent = 1;
+        } else {
+            indent = 0;
+        }
+
+        let padding = '';
+        for (let i = 0; i < pad; i++) padding += '  ';
+        formatted += padding + node + '\r\n';
+        pad += indent;
+    });
+    
+    return formatted.trim();
+}
+
+export function urlEncode(text: string): string {
+    return encodeURIComponent(text);
+}
+
+export function urlDecode(text: string): string {
+    return decodeURIComponent(text);
+}
+
+export function base64Decode(text: string): string {
+    try {
+        // Handle common data URI prefix stripping
+        const cleanText = text.replace(/^data:.*;base64,/, '');
+        return atob(cleanText);
+    } catch (e) {
+        throw new Error("Invalid Base64 string");
+    }
 }

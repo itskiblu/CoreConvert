@@ -1,4 +1,5 @@
 
+
 /**
  * Wraps PNG data in an ICO container. 
  * ICO format: Header (6 bytes) + Directory Entry (16 bytes) + Image Data.
@@ -133,6 +134,39 @@ export async function convertHeic(file: File, targetMimeType: string): Promise<B
   // resultBlob can be an array if multi-frame, we take the first
   const blob = Array.isArray(resultBlob) ? resultBlob[0] : resultBlob;
   return blob;
+}
+
+/**
+ * Converts TIFF using UTIF.js
+ */
+export async function convertTiff(file: File, targetMimeType: string): Promise<Blob> {
+  // @ts-ignore
+  const UTIF = window.UTIF;
+  if (!UTIF) throw new Error("UTIF library not loaded");
+
+  const buffer = await file.arrayBuffer();
+  const ifds = UTIF.decode(buffer);
+  if (!ifds || ifds.length === 0) throw new Error("Invalid TIFF");
+  
+  const ifd = ifds[0]; // Take first page
+  UTIF.decodeImage(buffer, ifd);
+  const rgba = UTIF.toRGBA8(ifd);
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = ifd.width;
+  canvas.height = ifd.height;
+  const ctx = canvas.getContext('2d');
+  if(!ctx) throw new Error("Canvas ctx error");
+  
+  const imageData = new ImageData(new Uint8ClampedArray(rgba), ifd.width, ifd.height);
+  ctx.putImageData(imageData, 0, 0);
+  
+  return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("TIFF conversion failed"));
+      }, targetMimeType, 0.92);
+  });
 }
 
 /**

@@ -8,7 +8,8 @@ interface AboutContentProps {
 
 export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
   // Group options by category for the list
-  const categories = ['Image', 'Data', 'Document', 'Audio', 'Video', 'Utility'];
+  const categories = ['Image', 'Data', 'Document', 'Audio', 'Video', '3D', 'Font', 'Utility'];
+  const Icon3D = ICONS['3D'];
   
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
@@ -88,16 +89,26 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
                     {cat === 'Video' && <ICONS.Video />}
                     {cat === 'Data' && <ICONS.Data />}
                     {cat === 'Document' && <ICONS.Document />}
+                    {cat === '3D' && <Icon3D />}
+                    {cat === 'Font' && <ICONS.Font />}
                     {cat === 'Utility' && <ICONS.Utility />}
                   </div>
                   <h3 className="font-black text-lg uppercase tracking-tight text-black dark:text-white">{cat}</h3>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {CONVERSION_OPTIONS.filter(opt => opt.category === cat).map(opt => (
-                    <span key={opt.value} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
-                      {opt.label.replace('Convert to ', '').replace('Extract Audio ', '')}
-                    </span>
-                  ))}
+                  {cat === 'Data' ? (
+                    ['JSON', 'CSV', 'XML', 'YAML', 'TSV', 'SQL', 'EXCEL'].map(fmt => (
+                      <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {fmt}
+                      </span>
+                    ))
+                  ) : (
+                    CONVERSION_OPTIONS.filter(opt => opt.category === cat).map(opt => (
+                      <span key={opt.value} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {opt.label.replace('Convert to ', '').replace('Extract Audio ', '')}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
             ))}

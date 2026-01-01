@@ -1,12 +1,35 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import JSZip from 'jszip';
 import { FileItem, ConversionStatus, ConversionType } from './types';
-import { CONVERSION_OPTIONS, ICONS } from './constants';
+import { 
+  CONVERSION_OPTIONS, 
+  ICONS, 
+  isImage, 
+  isHeic, 
+  isTiff, 
+  isSvg, 
+  isPdf, 
+  isAudio, 
+  isVideo, 
+  is3d,
+  isFont,
+  isJson, 
+  isCsv, 
+  isTsv,
+  isYaml, 
+  isXml, 
+  isXlsx, 
+  isMd, 
+  isDocx, 
+  isHtml, 
+  isText 
+} from './constants';
 import { ConversionCard } from './components/ConversionCard';
 import { PrivacyContent } from './components/PrivacyContent';
 import { TermsContent } from './components/TermsContent';
 import { AboutContent } from './components/AboutContent';
-import { convertImage, convertSvg, imageToSvg, convertHeic } from './utils/imageUtils';
+import { convertImage, convertSvg, imageToSvg, convertHeic, convertTiff } from './utils/imageUtils';
 import { 
   readFileAsText, 
   jsonToCsv, 
@@ -20,11 +43,20 @@ import {
   jsonToSql,
   xlsxToJson,
   xlsxToCsv,
-  markdownToHtml 
+  markdownToHtml,
+  docxToHtml,
+  docxToText,
+  htmlToMarkdown,
+  formatXml,
+  urlEncode,
+  urlDecode,
+  base64Decode
 } from './utils/dataUtils';
-import { decodeAudio, audioBufferToWav, audioBufferToMp3 } from './utils/audioUtils';
+import { decodeAudio, audioBufferToWav, audioBufferToMp3, convertAudioViaRecorder } from './utils/audioUtils';
 import { takeVideoSnapshot, convertVideo } from './utils/videoUtils';
 import { imageToPdf, textToPdf, pdfToImage, getPdfPreview } from './utils/pdfUtils';
+import { convertModel, modelToImage } from './utils/modelUtils';
+import { fontToTtf, fontToOtf, fontToWoff, fontToJson, fontToCss } from './utils/fontUtils';
 
 interface Notification {
   id: string;
@@ -91,26 +123,32 @@ export default function App() {
       const name = file.name.toLowerCase();
       const mime = file.type.toLowerCase();
 
-      // Detection Logic
+      // Detection Logic using shared constants
       const isPng = mime === 'image/png' || name.endsWith('.png');
       const isJpg = mime === 'image/jpeg' || mime === 'image/jpg' || name.endsWith('.jpg') || name.endsWith('.jpeg');
-      const isHeicFile = name.endsWith('.heic') || name.endsWith('.heif');
-      const isPdf = mime === 'application/pdf' || name.endsWith('.pdf');
       const isIco = name.endsWith('.ico') || mime.includes('icon');
       
-      const isImage = file.type.startsWith('image/') && !file.type.includes('svg') && !isHeicFile;
-      const isSvg = file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg');
-      const isAudio = file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name);
-      const isJson = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json');
-      const isCsv = file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv');
-      const isYaml = file.name.toLowerCase().endsWith('.yaml') || file.name.toLowerCase().endsWith('.yml');
-      const isXml = file.type.includes('xml') || file.name.toLowerCase().endsWith('.xml');
-      const isXlsx = name.endsWith('.xlsx') || name.endsWith('.xls');
-      const isMd = file.name.toLowerCase().endsWith('.md') || file.name.toLowerCase().endsWith('.markdown');
-      const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|avi|mkv)$/i.test(file.name);
-      const isTextFile = file.type.startsWith('text/') || name.endsWith('.txt');
+      const fileIsImage = isImage(file);
+      const fileIsHeic = isHeic(file);
+      const fileIsTiff = isTiff(file);
+      const fileIsSvg = isSvg(file);
+      const fileIsPdf = isPdf(file);
+      const fileIsAudio = isAudio(file);
+      const fileIsVideo = isVideo(file);
+      const fileIs3d = is3d(file);
+      const fileIsFont = isFont(file);
+      const fileIsJson = isJson(file);
+      const fileIsCsv = isCsv(file);
+      const fileIsTsv = isTsv(file);
+      const fileIsYaml = isYaml(file);
+      const fileIsXml = isXml(file);
+      const fileIsXlsx = isXlsx(file);
+      const fileIsMd = isMd(file);
+      const fileIsDocx = isDocx(file);
+      const fileIsHtml = isHtml(file);
+      const fileIsText = isText(file); // fallback for generic text
 
-      const isRecognized = isImage || isHeicFile || isSvg || isPdf || isAudio || isVideo || isJson || isCsv || isYaml || isXml || isXlsx || isMd || isTextFile;
+      const isRecognized = fileIsImage || fileIsHeic || fileIsTiff || fileIsSvg || fileIsPdf || fileIsAudio || fileIsVideo || fileIs3d || fileIsFont || fileIsJson || fileIsCsv || fileIsTsv || fileIsYaml || fileIsXml || fileIsXlsx || fileIsMd || fileIsDocx || fileIsHtml || fileIsText;
 
       if (!isRecognized) {
         setUnsupportedFileName(file.name);
@@ -121,43 +159,63 @@ export default function App() {
       let previewUrl: string | undefined = undefined;
 
       // Determine default conversion suggestion based on input type
-      if (isHeicFile) {
+      if (fileIsHeic) {
         defaultType = 'HEIC_TO_PNG';
       }
-      else if (isImage) {
+      else if (fileIsTiff) {
+        defaultType = 'TIFF_TO_PNG';
+      }
+      else if (fileIsImage) {
         if (isIco) defaultType = 'IMAGE_TO_PNG';
         else if (isPng) defaultType = 'IMAGE_TO_JPG';
         else if (isJpg) defaultType = 'IMAGE_TO_PNG';
         else defaultType = 'IMAGE_TO_PNG';
         previewUrl = URL.createObjectURL(file);
       }
-      else if (isSvg) {
+      else if (fileIsSvg) {
         defaultType = 'SVG_TO_PNG';
         previewUrl = URL.createObjectURL(file);
       }
-      else if (isPdf) {
+      else if (fileIsPdf) {
         defaultType = 'PDF_TO_PNG';
         // Generate PDF thumbnail
         previewUrl = await getPdfPreview(file);
       }
-      else if (isAudio) {
+      else if (fileIsDocx) {
+        // Default to HTML or Text
+        defaultType = 'DOCX_TO_HTML';
+      }
+      else if (fileIsAudio) {
         const isMp3 = mime === 'audio/mpeg' || name.endsWith('.mp3');
         defaultType = isMp3 ? 'AUDIO_TO_WAV' : 'AUDIO_TO_MP3';
       }
-      else if (isVideo) {
+      else if (fileIsVideo) {
         const isMp4 = mime === 'video/mp4' || name.endsWith('.mp4');
         const isWebm = mime === 'video/webm' || name.endsWith('.webm');
         if (isMp4) defaultType = 'VIDEO_TO_WEBM';
         else if (isWebm) defaultType = 'VIDEO_TO_MP4';
         else defaultType = 'VIDEO_TO_MP4';
       }
-      else if (isJson) defaultType = 'JSON_TO_CSV';
-      else if (isCsv) defaultType = 'CSV_TO_JSON';
-      else if (isYaml) defaultType = 'YAML_TO_JSON';
-      else if (isXml) defaultType = 'XML_TO_JSON';
-      else if (isXlsx) defaultType = 'XLSX_TO_JSON';
-      else if (isMd) defaultType = 'MARKDOWN_TO_PDF';
-      else if (isTextFile) defaultType = 'TEXT_TO_PDF';
+      else if (fileIs3d) {
+        const isStl = name.endsWith('.stl');
+        const isObj = name.endsWith('.obj');
+        if (isStl) defaultType = 'STL_TO_OBJ';
+        else if (isObj) defaultType = 'OBJ_TO_STL';
+        else defaultType = 'MODEL_TO_IMAGE';
+      }
+      else if (fileIsFont) {
+        const isTtf = name.endsWith('.ttf');
+        defaultType = isTtf ? 'FONT_TO_WOFF' : 'FONT_TO_TTF';
+      }
+      else if (fileIsJson) defaultType = 'JSON_TO_CSV';
+      else if (fileIsCsv) defaultType = 'CSV_TO_JSON';
+      else if (fileIsTsv) defaultType = 'TSV_TO_JSON';
+      else if (fileIsYaml) defaultType = 'YAML_TO_JSON';
+      else if (fileIsXml) defaultType = 'XML_TO_JSON';
+      else if (fileIsXlsx) defaultType = 'XLSX_TO_JSON';
+      else if (fileIsMd) defaultType = 'MARKDOWN_TO_PDF';
+      else if (fileIsHtml) defaultType = 'HTML_TO_MARKDOWN';
+      else if (fileIsText) defaultType = 'TEXT_TO_PDF';
 
       validFiles.push({
         id: Math.random().toString(36).substring(7),
@@ -211,6 +269,20 @@ export default function App() {
           resultExtension = item.type === 'HEIC_TO_PNG' ? 'png' : 'jpg';
           break;
         }
+        case 'TIFF_TO_PNG':
+        case 'TIFF_TO_JPG': {
+          const mime = item.type === 'TIFF_TO_PNG' ? 'image/png' : 'image/jpeg';
+          resultBlob = await convertTiff(item.file, mime);
+          resultExtension = item.type === 'TIFF_TO_PNG' ? 'png' : 'jpg';
+          break;
+        }
+        case 'TIFF_TO_PDF': {
+          const pngBlob = await convertTiff(item.file, 'image/png');
+          const pngFile = new File([pngBlob], 'temp.png', { type: 'image/png' });
+          resultBlob = await imageToPdf(pngFile);
+          resultExtension = 'pdf';
+          break;
+        }
         case 'IMAGE_TO_PNG':
         case 'SVG_TO_PNG':
           resultBlob = item.file.type.includes('svg') ? await convertSvg(item.file, 'image/png') : await convertImage(item.file, 'image/png');
@@ -225,6 +297,10 @@ export default function App() {
         case 'SVG_TO_WEBP':
           resultBlob = item.file.type.includes('svg') ? await convertSvg(item.file, 'image/webp') : await convertImage(item.file, 'image/webp');
           resultExtension = 'webp';
+          break;
+        case 'IMAGE_TO_AVIF':
+          resultBlob = await convertImage(item.file, 'image/avif');
+          resultExtension = 'avif';
           break;
         case 'IMAGE_TO_SVG':
           resultBlob = await imageToSvg(item.file);
@@ -259,6 +335,25 @@ export default function App() {
           resultBlob = await pdfToImage(item.file);
           resultExtension = 'png';
           break;
+        case 'DOCX_TO_HTML': {
+          const html = await docxToHtml(item.file);
+          resultBlob = new Blob([html], { type: 'text/html' });
+          resultExtension = 'html';
+          break;
+        }
+        case 'DOCX_TO_TEXT': {
+          const text = await docxToText(item.file);
+          resultBlob = new Blob([text], { type: 'text/plain' });
+          resultExtension = 'txt';
+          break;
+        }
+        case 'DOCX_TO_MARKDOWN': {
+          const html = await docxToHtml(item.file);
+          const md = htmlToMarkdown(html);
+          resultBlob = new Blob([md], { type: 'text/markdown' });
+          resultExtension = 'md';
+          break;
+        }
           
         // --- Data Operations ---
         case 'XLSX_TO_JSON': {
@@ -274,7 +369,11 @@ export default function App() {
           break;
         }
         case 'JSON_TO_CSV':
+        case 'JSON_TO_TSV':
         case 'CSV_TO_JSON':
+        case 'CSV_TO_TSV':
+        case 'TSV_TO_JSON':
+        case 'TSV_TO_CSV':
         case 'JSON_TO_YAML':
         case 'YAML_TO_JSON':
         case 'XML_TO_JSON':
@@ -293,6 +392,7 @@ export default function App() {
 
           // Normalize everything to JSON first
           if (item.file.name.endsWith('.csv')) intermediateJson = csvToJson(rawText);
+          else if (item.file.name.endsWith('.tsv') || item.type.startsWith('TSV_')) intermediateJson = csvToJson(rawText, '\t');
           else if (item.file.name.endsWith('.yaml') || item.file.name.endsWith('.yml')) intermediateJson = yamlToJson(rawText);
           else if (item.file.name.endsWith('.xml')) intermediateJson = xmlToJson(rawText);
           else intermediateJson = rawText; 
@@ -302,6 +402,9 @@ export default function App() {
           if (item.type.endsWith('_TO_CSV')) {
             finalContent = jsonToCsv(intermediateJson);
             resultExtension = 'csv';
+          } else if (item.type.endsWith('_TO_TSV')) {
+            finalContent = jsonToCsv(intermediateJson, '\t');
+            resultExtension = 'tsv';
           } else if (item.type.endsWith('_TO_YAML')) {
             finalContent = jsonToYaml(intermediateJson);
             resultExtension = 'yaml';
@@ -333,6 +436,55 @@ export default function App() {
           resultExtension = 'wav';
           break;
         }
+        case 'AUDIO_TO_OGG': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'ogg', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'ogg';
+          break;
+        }
+        case 'AUDIO_TO_M4A': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'm4a', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'm4a';
+          break;
+        }
+        case 'AUDIO_TO_WEBM': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'webm', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'webm';
+          break;
+        }
+        case 'AUDIO_TO_FLAC': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'flac', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'flac';
+          break;
+        }
+        case 'AUDIO_TO_AAC': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'aac', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'aac';
+          break;
+        }
+        case 'AUDIO_TO_OPUS': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'opus', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'opus';
+          break;
+        }
+        case 'AUDIO_TO_M4R': {
+          resultBlob = await convertAudioViaRecorder(item.file, 'm4r', (p) => {
+             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
+          });
+          resultExtension = 'm4r';
+          break;
+        }
 
         // --- Video Operations ---
         case 'VIDEO_TO_WEBM': {
@@ -354,6 +506,68 @@ export default function App() {
           resultExtension = 'png';
           break;
         }
+
+        // --- 3D Operations ---
+        case 'OBJ_TO_STL':
+        case 'GLB_TO_STL':
+        case 'PLY_TO_STL': {
+          resultBlob = await convertModel(item.file, 'stl');
+          resultExtension = 'stl';
+          break;
+        }
+        case 'STL_TO_OBJ':
+        case 'GLB_TO_OBJ':
+        case 'PLY_TO_OBJ': {
+          resultBlob = await convertModel(item.file, 'obj');
+          resultExtension = 'obj';
+          break;
+        }
+        case 'OBJ_TO_GLB':
+        case 'STL_TO_GLB':
+        case 'PLY_TO_GLB': {
+          resultBlob = await convertModel(item.file, 'glb');
+          resultExtension = 'glb';
+          break;
+        }
+        case 'OBJ_TO_USDZ':
+        case 'STL_TO_USDZ':
+        case 'GLB_TO_USDZ': {
+          resultBlob = await convertModel(item.file, 'usdz');
+          resultExtension = 'usdz';
+          break;
+        }
+        case 'MODEL_TO_IMAGE': {
+          resultBlob = await modelToImage(item.file);
+          resultExtension = 'png';
+          break;
+        }
+        
+        // --- Font Operations ---
+        case 'FONT_TO_TTF': {
+          resultBlob = await fontToTtf(item.file);
+          resultExtension = 'ttf';
+          break;
+        }
+        case 'FONT_TO_OTF': {
+          resultBlob = await fontToOtf(item.file);
+          resultExtension = 'otf';
+          break;
+        }
+        case 'FONT_TO_WOFF': {
+          resultBlob = await fontToWoff(item.file);
+          resultExtension = 'woff';
+          break;
+        }
+        case 'FONT_TO_JSON': {
+          resultBlob = await fontToJson(item.file);
+          resultExtension = 'json';
+          break;
+        }
+        case 'FONT_TO_CSS': {
+          resultBlob = await fontToCss(item.file);
+          resultExtension = 'css';
+          break;
+        }
         
         // --- Utilities ---
         case 'MARKDOWN_TO_HTML': {
@@ -361,6 +575,22 @@ export default function App() {
           const html = markdownToHtml(text);
           resultBlob = new Blob([html], { type: 'text/html' });
           resultExtension = 'html';
+          break;
+        }
+        case 'HTML_TO_MARKDOWN': {
+          const text = await readFileAsText(item.file);
+          const md = htmlToMarkdown(text);
+          resultBlob = new Blob([md], { type: 'text/markdown' });
+          resultExtension = 'md';
+          break;
+        }
+        case 'HTML_TO_TEXT': {
+          const text = await readFileAsText(item.file);
+          // Simple strip tags
+          const doc = new DOMParser().parseFromString(text, 'text/html');
+          const plain = doc.body.textContent || "";
+          resultBlob = new Blob([plain], { type: 'text/plain' });
+          resultExtension = 'txt';
           break;
         }
         case 'JSON_PRETTIFY': {
@@ -377,10 +607,43 @@ export default function App() {
           resultExtension = 'json';
           break;
         }
+        case 'XML_PRETTIFY': {
+          const text = await readFileAsText(item.file);
+          const formatted = formatXml(text, false);
+          resultBlob = new Blob([formatted], { type: 'text/xml' });
+          resultExtension = 'xml';
+          break;
+        }
+        case 'XML_MINIFY': {
+          const text = await readFileAsText(item.file);
+          const formatted = formatXml(text, true);
+          resultBlob = new Blob([formatted], { type: 'text/xml' });
+          resultExtension = 'xml';
+          break;
+        }
+        case 'URL_ENCODE': {
+          const text = await readFileAsText(item.file);
+          resultBlob = new Blob([urlEncode(text)], { type: 'text/plain' });
+          resultExtension = 'txt';
+          break;
+        }
+        case 'URL_DECODE': {
+          const text = await readFileAsText(item.file);
+          resultBlob = new Blob([urlDecode(text)], { type: 'text/plain' });
+          resultExtension = 'txt';
+          break;
+        }
         case 'BASE64_ENCODE': {
           const base64 = await fileToBase64(item.file);
           resultBlob = new Blob([base64], { type: 'text/plain' });
           resultExtension = 'base64.txt';
+          break;
+        }
+        case 'BASE64_DECODE': {
+          const text = await readFileAsText(item.file);
+          const decoded = base64Decode(text);
+          resultBlob = new Blob([decoded], { type: 'text/plain' });
+          resultExtension = 'txt';
           break;
         }
         case 'FILE_TO_ZIP': {
@@ -412,7 +675,7 @@ export default function App() {
           resultUrl: url,
           resultName: newName,
           // Update preview for image results to show the converted result
-          previewUrl: (resultExtension === 'png' || resultExtension === 'jpg' || resultExtension === 'webp' || resultExtension === 'bmp' || resultExtension === 'ico') ? url : f.previewUrl,
+          previewUrl: (resultExtension === 'png' || resultExtension === 'jpg' || resultExtension === 'webp' || resultExtension === 'bmp' || resultExtension === 'ico' || resultExtension === 'avif') ? url : f.previewUrl,
           file: new File([resultBlob!], newName, { type: resultBlob!.type })
         } : f));
       }

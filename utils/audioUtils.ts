@@ -159,3 +159,83 @@ export async function decodeAudio(file: File): Promise<AudioBuffer> {
   const arrayBuffer = await file.arrayBuffer();
   return await audioCtx.decodeAudioData(arrayBuffer);
 }
+
+/**
+ * Converts audio to OGG, M4A, WEBM, FLAC, AAC, OPUS, or M4R using the MediaRecorder API.
+ * This is a real-time (or quasi-real-time) conversion process.
+ */
+export async function convertAudioViaRecorder(
+  file: File,
+  targetFormat: 'ogg' | 'm4a' | 'webm' | 'flac' | 'aac' | 'opus' | 'm4r',
+  onProgress?: (progress: number) => void
+): Promise<Blob> {
+  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  
+  // Determine supported MIME type for the requested format
+  const mimeTypes: Record<string, string[]> = {
+    'ogg': ['audio/ogg; codecs=opus', 'audio/ogg', 'application/ogg'],
+    'opus': ['audio/ogg; codecs=opus', 'audio/opus'],
+    'm4a': ['audio/mp4', 'audio/aac', 'audio/mp4; codecs=mp4a.40.2'],
+    'm4r': ['audio/mp4', 'audio/aac', 'audio/mp4; codecs=mp4a.40.2'], // M4R is just AAC in mp4 container
+    'webm': ['audio/webm; codecs=opus', 'audio/webm'],
+    'flac': ['audio/flac', 'audio/x-flac'],
+    'aac': ['audio/aac', 'audio/aacp', 'audio/mp4; codecs=mp4a.40.2']
+  };
+  
+  const supportedMime = mimeTypes[targetFormat].find(m => MediaRecorder.isTypeSupported(m));
+  
+  if (!supportedMime) {
+     throw new Error(`Your browser does not support encoding to ${targetFormat.toUpperCase()}`);
+  }
+
+  const dest = audioCtx.createMediaStreamDestination();
+  const source = audioCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(dest);
+  
+  const recorder = new MediaRecorder(dest.stream, { mimeType: supportedMime });
+  const chunks: Blob[] = [];
+  
+  return new Promise((resolve, reject) => {
+      recorder.ondataavailable = (e) => {
+          if(e.data.size > 0) chunks.push(e.data);
+      };
+      
+      recorder.onstop = () => {
+         const blob = new Blob(chunks, { type: supportedMime });
+         source.disconnect();
+         audioCtx.close();
+         resolve(blob);
+      };
+      
+      recorder.onerror = (e) => {
+          reject(e);
+          audioCtx.close();
+      };
+
+      // Progress tracker based on playback time
+      const duration = audioBuffer.duration;
+      const interval = setInterval(() => {
+          if (audioCtx.state === 'running') {
+               const p = (audioCtx.currentTime / duration) * 100;
+               if(onProgress) onProgress(Math.min(p, 99));
+          }
+      }, 100);
+
+      source.onended = () => {
+          clearInterval(interval);
+          // Wait a tiny bit to ensure recorder captures the end
+          setTimeout(() => {
+            if (recorder.state !== 'inactive') recorder.stop();
+            if(onProgress) onProgress(100);
+          }, 100);
+      };
+
+      recorder.start();
+      source.start();
+      // Resume context if suspended (common in browsers requiring user gesture)
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+  });
+}
