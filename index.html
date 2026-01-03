@@ -16,7 +16,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
     
-    <!-- Optimized Font Loading -->
+    <!-- Critical Font Loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="all">
 
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
@@ -58,28 +59,37 @@
             contain: content;
         }
 
+        /* Neubrutal Layout Foundations */
         .neubrutal-shadow { box-shadow: 8px 8px 0px 0px var(--brutal-shadow); }
-        .neubrutal-shadow-sm { box-shadow: 4px 4px 0px 0px var(--brutal-shadow); }
         .neubrutal-border { border: 3px solid var(--brutal-border); }
         
-        /* Skeleton Layout (Prevents CLS) */
+        /* Skeleton Layout: Matches the actual app layout to eliminate shift */
+        .skeleton-overlay {
+            width: 100%;
+            max-width: 80rem; /* 1280px / 7xl */
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        @media (min-width: 768px) { .skeleton-overlay { padding: 2rem; } }
+
         .skeleton-header {
-            height: 80px;
+            height: 70px;
             margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            width: 100%;
         }
         .skeleton-main {
             display: flex;
             gap: 2rem;
             justify-content: center;
-            padding: 0 1rem;
             flex-wrap: wrap;
+            margin-top: 2rem;
         }
         .skeleton-box {
-            width: 480px;
+            width: 100%;
+            max-width: 480px;
             aspect-ratio: 1/1;
             background: white;
             border: 3px solid black;
@@ -87,10 +97,11 @@
         }
         .dark .skeleton-box { background: #18181b; border-color: white; box-shadow: 8px 8px 0px 0px white; }
 
+        /* Smooth reveal when JS/Tailwind is ready */
         html.tw-ready .skeleton-overlay { display: none; }
     </style>
 
-    <!-- Theme initialization -->
+    <!-- Theme initialization: Blocking to prevent flash but ultra-minimal -->
     <script>
         (function() {
             const saved = localStorage.getItem('core-dark-mode');
@@ -99,19 +110,18 @@
         })();
     </script>
 
-    <!-- Tailwind Play CDN -->
+    <!-- Optimized Tailwind Engine -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        brutalYellow: '#FAFF00',
-                    }
+                    colors: { brutalYellow: '#FAFF00' }
                 }
             }
         };
+        // Hydration signal
         window.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.add('tw-ready');
         });
@@ -141,8 +151,8 @@
     "lamejs": "https://esm.sh/lamejs@1.2.1",
     "xlsx": "https://esm.sh/xlsx@0.18.5",
     "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "react-dom": "https://esm.sh/react-dom@^19.2.3",
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
@@ -155,38 +165,29 @@
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(4px, 4px) !important;
         }
-        
         .neubrutal-button-active-lg:active {
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(8px, 8px) !important;
         }
-
         .neubrutal-trigger:active .neubrutal-target {
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(4px, 4px) !important;
         }
-        
         .brutal-text-stroke { -webkit-text-stroke: 1.5px black; }
-
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-left: 2px solid var(--brutal-border); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--brutal-border); border: 1px solid var(--bg-color); }
-
         .animate-snappy { transition: transform 0.1s cubic-bezier(0, 0, 0.2, 1); }
-
-        *:focus-visible {
-            outline: 4px solid var(--brutal-border) !important;
-            outline-offset: 2px !important;
-        }
+        *:focus-visible { outline: 4px solid var(--brutal-border) !important; outline-offset: 2px !important; }
     </style>
 </head>
 <body class="min-h-screen">
     <div id="root">
-        <!-- Structural Skeleton to satisfy PageSpeed LCP/FCP -->
-        <div class="skeleton-overlay w-full max-w-7xl mx-auto p-4 md:p-8">
+        <!-- Structural Skeleton for FCP/CLS optimization (renders immediately) -->
+        <div class="skeleton-overlay">
             <div class="skeleton-header">
-                <div style="width: 240px; height: 50px; background: var(--accent); border: 3px solid black; box-shadow: 4px 4px 0px black;"></div>
-                <div style="width: 120px; height: 40px; background: white; border: 3px solid black; box-shadow: 4px 4px 0px black;"></div>
+                <div style="width: 200px; height: 50px; background: var(--accent); border: 3px solid black; box-shadow: 4px 4px 0px black;"></div>
+                <div style="width: 100px; height: 40px; background: white; border: 3px solid black; box-shadow: 4px 4px 0px black;"></div>
             </div>
             <div class="skeleton-main">
                 <div class="skeleton-box"></div>
@@ -194,7 +195,8 @@
             </div>
         </div>
     </div>
-    <!-- Load entry point with high priority -->
+    <!-- Preload critical path for LCP -->
+    <link rel="modulepreload" href="./index.tsx">
     <script type="module" src="./index.tsx" fetchpriority="high"></script>
 </body>
 </html>
