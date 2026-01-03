@@ -84,10 +84,6 @@ export const CONVERSION_OPTIONS: ConversionOption[] = [
   { value: 'IMAGE_TO_SVG', label: 'Convert to SVG', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_PDF', label: 'Convert to PDF', category: 'Document', isSupported: isImage },
   { value: 'IMAGE_GRAYSCALE', label: 'Grayscale Filter', category: 'Image', isSupported: isImage },
-  
-  // --- AI FEATURES ---
-  { value: 'IMAGE_TO_DESCRIPTION', label: 'Analyze Image (AI)', category: 'AI', isSupported: isImage },
-  { value: 'TEXT_TO_SUMMARY', label: 'Summarize Text (AI)', category: 'AI', isSupported: (f) => isTextAndMarkup(f) || isDocx(f) },
 
   // --- DATA (Input: JSON, CSV, XML, YAML, TSV, XLSX, SQL) ---
   { value: 'DATA_TO_JSON', label: 'Convert to JSON', category: 'Data', isSupported: isData },
@@ -248,12 +244,6 @@ export const ICONS = {
   Font: () => (
     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
       <path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z" />
-    </svg>
-  ),
-
-  AI: () => (
-    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-        <path d="M9.81 5.56L9 2l-.81 3.56L4.63 6.38l3.56.81L9 10.75l.81-3.56 3.56-.81zM19 8.63l-.45-1.98-1.98-.45 1.98-.45.45-1.98.45 1.98 1.98.45-1.98.45zM16.05 13.05l-1.25 5.52-5.52 1.25 5.52 1.25 1.25 5.52 1.25-5.52 5.52-1.25-5.52-1.25z" />
     </svg>
   ),
   
