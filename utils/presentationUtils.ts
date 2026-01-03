@@ -1,5 +1,9 @@
 
+
+
 import { ConversionType } from '../types';
+import JSZip from 'jszip';
+import { jsPDF } from 'jspdf';
 
 interface ConversionResult {
   url: string;
@@ -31,9 +35,8 @@ export async function convertPresentationFile(file: File, type: ConversionType):
   if (type === 'PRESENTATION_TO_PPTX') {
      // For OpenXML formats, the internal structure is largely compatible.
      // To "Repair" or "Convert" a PPSX to PPTX, we often just need to verify it's a valid ZIP and save with .pptx extension.
+     // We do a sanity check by loading it with JSZip first.
      try {
-       // @ts-ignore
-       const JSZip = (await import('jszip')).default;
        const zip = await JSZip.loadAsync(file);
        // Re-generate to ensure clean headers
        const blob = await zip.generateAsync({ type: 'blob' });
@@ -134,9 +137,7 @@ async function createPptxFromText(text: string, title: string, mode: 'text' | 'm
  * and parsing the internal XML structure.
  */
 async function extractSlidesFromPptx(file: File): Promise<string[]> {
-  // @ts-ignore
-  const JSZip = (await import('jszip')).default;
-  let zip;
+  let zip: JSZip;
   try {
     zip = await JSZip.loadAsync(file);
   } catch (e) {
@@ -150,6 +151,7 @@ async function extractSlidesFromPptx(file: File): Promise<string[]> {
   const slides: string[] = [];
   
   // Find all slide XML files
+  // Standard path: ppt/slides/slide1.xml
   const slideFiles = Object.keys(zip.files).filter(name => name.match(/ppt\/slides\/slide\d+\.xml/));
   
   // Sort naturally (slide1, slide2, slide10...)
@@ -166,6 +168,9 @@ async function extractSlidesFromPptx(file: File): Promise<string[]> {
     if (!xmlStr) continue;
 
     const xml = parser.parseFromString(xmlStr, "text/xml");
+    
+    // In OpenXML PresentationML, text is usually within <a:t> tags
+    // Sometimes it's nested deep within paragraphs <a:p> and runs <a:r>
     const textNodes = xml.getElementsByTagName('a:t');
     const slideText: string[] = [];
 
@@ -245,10 +250,10 @@ ${slideDivs}
 
 async function generatePdf(slides: string[]): Promise<Blob> {
   // @ts-ignore
-  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
   
   const width = doc.internal.pageSize.getWidth();
+  const height = doc.internal.pageSize.getHeight();
   const margin = 50;
   
   doc.setFont("helvetica", "normal");

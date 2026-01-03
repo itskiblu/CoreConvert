@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ICONS, CONVERSION_OPTIONS } from '../constants';
 import { convertImageFile } from '../utils/imageUtils';
 import { convertDocumentFile } from '../utils/pdfUtils';
+import { jsPDF } from 'jspdf';
 
 interface DiagnosticsContentProps {
   onBack: () => void;
@@ -59,7 +60,6 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
          if (type === 'PDF_TO_PNG') {
              // Generate a valid PDF using jsPDF for testing
              // @ts-ignore
-             const { jsPDF } = await import('jspdf');
              const doc = new jsPDF();
              doc.text("Diagnostics Test PDF", 10, 10);
              const pdfBlob = doc.output('blob');
@@ -80,6 +80,7 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
 
       // 3. Data Mocks
       if (category === 'Data') {
+          // Most data tests rely on non-implemented logic in this demo, but we provide file anyway
           if (type.includes('JSON')) return new File(['{"test": true}'], 'mock.json', { type: 'application/json' });
           if (type.includes('CSV')) return new File(['a,b\n1,2'], 'mock.csv', { type: 'text/csv' });
           return new File(['dummy data'], 'mock.dat', { type: 'text/plain' });
@@ -124,7 +125,7 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
         continue;
       }
 
-      // 2. Run Conversion Logic
+      // 2. Run Conversion Logic (Mirroring App.tsx routing)
       try {
         let result = null;
         const type = test.id as any;
@@ -214,7 +215,7 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
             </p>
           </div>
           
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between pt-6">
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between border-t-2 border-dashed border-black dark:border-white/20 pt-6">
              <div className="flex flex-wrap gap-4">
                  <div className="bg-green-400 text-black neubrutal-border px-4 py-2 text-center min-w-[80px]">
                     <div className="text-2xl font-black leading-none">{stats.pass}</div>

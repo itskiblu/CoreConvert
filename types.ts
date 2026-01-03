@@ -33,6 +33,7 @@ export type ConversionType =
   | 'IMAGE_TO_CUR'
   | 'IMAGE_TO_PDF'
   | 'IMAGE_GRAYSCALE'
+  | 'IMAGE_TO_DESCRIPTION' // AI Feature
   
   // Data (Universal Inputs: JSON, CSV, TSV, YAML, XML, XLSX, SQL)
   | 'DATA_TO_JSON'
@@ -41,7 +42,7 @@ export type ConversionType =
   | 'DATA_TO_XML'
   | 'DATA_TO_SQL'
   | 'DATA_TO_TSV'
-  | 'DATA_TO_XLSX' // Added Excel support
+  | 'DATA_TO_XLSX'
   | 'DATA_PRETTIFY'
   | 'DATA_MINIFY'
 
@@ -60,6 +61,7 @@ export type ConversionType =
   | 'URL_DECODE'
   | 'HTML_MINIFY'
   | 'CSS_MINIFY'
+  | 'TEXT_TO_SUMMARY' // AI Feature
 
   // Specific Documents
   | 'DOCX_TO_HTML'
@@ -71,7 +73,7 @@ export type ConversionType =
   | 'PRESENTATION_TO_HTML'
   | 'PRESENTATION_TO_TEXT'
   | 'PRESENTATION_TO_JSON'
-  | 'PRESENTATION_TO_PPTX' // Useful for converting PPSX (Show) -> PPTX (Edit)
+  | 'PRESENTATION_TO_PPTX'
 
   // Audio
   | 'AUDIO_TO_MP3'
@@ -129,6 +131,6 @@ export interface FileItem {
 export interface ConversionOption {
   value: ConversionType;
   label: string;
-  category: 'Image' | 'Data' | 'Text' | 'Document' | 'Presentation' | 'Audio' | 'Video' | '3D' | 'Font' | 'Utility';
+  category: 'Image' | 'Data' | 'Text' | 'Document' | 'Presentation' | 'Audio' | 'Video' | '3D' | 'Font' | 'Utility' | 'AI';
   isSupported: (file: File) => boolean;
 }

@@ -1,85 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoreConvert | Professional Local File Converter</title>
-    
-    <!-- SEO & Social Metadata -->
-    <meta name="description" content="A powerful, private, and local-first file conversion utility. Convert images, documents, audio, and data formats directly in your browser without uploading to any server.">
-    <meta name="keywords" content="file converter, local converter, private conversion, image converter, pdf to png, json to csv, secure file conversion">
-    <meta property="og:title" content="CoreConvert | Private File Conversion">
-    <meta property="og:description" content="Convert files locally with total privacy. No uploads, no servers, zero latency.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://coreconvert.app">
-    <meta name="twitter:card" content="summary_large_image">
-    
-    <!-- PWA Support -->
-    <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#FAFF00">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg width='180' height='180' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='64' height='64' fill='%23FAFF00'/%3E%3Cpath fill='black' d='M12 12V52H52V12H12ZM20 20H44V44H20V20Z'/%3E%3C/svg%3E">
-
-    <!-- Optimize performance by preconnecting to critical font origins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
-    </noscript>
-
+    <title>CoreConvert</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
-    
-    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        window.addEventListener('load', () => {
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            brutalYellow: '#FAFF00',
-                        }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brutalYellow: '#FAFF00',
                     }
                 }
             }
-        });
+        }
     </script>
-    
-    <!-- Import map for ESM modules -->
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@^19.2.3",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "jszip": "https://esm.sh/jszip@^3.10.1",
-        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-        "react-dom": "https://esm.sh/react-dom@^19.2.3",
-        "three": "https://esm.sh/three@0.160.0",
-        "three/": "https://esm.sh/three@0.160.0/",
-        "heic2any": "https://esm.sh/heic2any@0.0.4",
-        "utif": "https://esm.sh/utif@3.1.0",
-        "ag-psd": "https://esm.sh/ag-psd@15.0.0",
-        "@jsquash/avif": "https://esm.sh/@jsquash/avif@1.3.0",
-        "gifenc": "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js",
-        "mammoth": "https://esm.sh/mammoth@1.6.0",
-        "jspdf": "https://esm.sh/jspdf@2.5.1",
-        "marked": "https://esm.sh/marked@12.0.0",
-        "turndown": "https://esm.sh/turndown@7.1.3",
-        "html2canvas": "https://esm.sh/html2canvas@1.4.1",
-        "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
-        "pdfjs-dist/": "https://esm.sh/pdfjs-dist@3.11.174/",
-        "js-yaml": "https://esm.sh/js-yaml@4.1.0",
-        "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
-        "opentype.js": "https://esm.sh/opentype.js@1.3.4",
-        "lamejs": "https://esm.sh/lamejs@1.2.1",
-        "xlsx": "https://esm.sh/xlsx@0.18.5"
-      }
-    }
-    </script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -119,8 +61,20 @@
             transform: translate(8px, 8px) !important;
         }
 
+        .neubrutal-trigger:active .neubrutal-target {
+            box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
+            transform: translate(4px, 4px) !important;
+        }
+
         .neubrutal-border {
             border: 3px solid var(--brutal-border);
+        }
+        
+        .brutal-text-stroke {
+            -webkit-text-stroke: 1.5px black;
+        }
+        .dark .brutal-text-stroke {
+            -webkit-text-stroke: 1.5px black; /* Keep black stroke even in dark mode for yellow pop */
         }
 
         .custom-scrollbar::-webkit-scrollbar {
@@ -135,17 +89,55 @@
           border: 1px solid var(--bg-color);
         }
 
+        .no-transition *:not(.animate-snappy) {
+            transition: none !important;
+        }
+        
         .animate-snappy {
             transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
         }
 
+        /* Accessibility: High contrast focus ring for keyboard navigation */
         *:focus-visible {
             outline: 4px solid var(--brutal-border) !important;
             outline-offset: 2px !important;
+            z-index: 50;
         }
     </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "jszip": "https://esm.sh/jszip@^3.10.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "three": "https://esm.sh/three@0.160.0",
+    "three/": "https://esm.sh/three@0.160.0/",
+    "heic2any": "https://esm.sh/heic2any@0.0.4",
+    "utif": "https://esm.sh/utif@3.1.0",
+    "ag-psd": "https://esm.sh/ag-psd@15.0.0",
+    "@jsquash/avif": "https://esm.sh/@jsquash/avif@1.3.0",
+    "gifenc": "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js",
+    "mammoth": "https://esm.sh/mammoth@1.6.0",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "marked": "https://esm.sh/marked@12.0.0",
+    "turndown": "https://esm.sh/turndown@7.1.3",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
+    "pdfjs-dist/": "https://esm.sh/pdfjs-dist@3.11.174/",
+    "js-yaml": "https://esm.sh/js-yaml@4.1.0",
+    "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
+    "opentype.js": "https://esm.sh/opentype.js@1.3.4",
+    "lamejs": "https://esm.sh/lamejs@1.2.1",
+    "xlsx": "https://esm.sh/xlsx@0.18.5"
+  }
+}
+</script>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen no-transition">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
