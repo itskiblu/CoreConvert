@@ -1,4 +1,3 @@
-
 import { ConversionType } from '../types';
 import { convertPresentationFile } from './presentationUtils';
 
@@ -65,12 +64,40 @@ const STRATEGIES: Partial<Record<ConversionType, ConversionStrategy>> = {
     const minified = text.replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
     return createResult(minified, f.name, 'text/html');
   },
+  'CSS_MINIFY': async (f) => {
+    const text = await f.text();
+    const minified = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/ ?([:;{}]) ?/g, '$1').trim();
+    return createResult(minified, f.name, 'text/css');
+  },
   'TEXT_UPPERCASE': (f) => transformText(f, t => t.toUpperCase()),
   'TEXT_LOWERCASE': (f) => transformText(f, t => t.toLowerCase()),
   'TEXT_TO_SNAKE_CASE': (f) => transformText(f, t => t.replace(/\s+/g, '_').toLowerCase()),
   'TEXT_TO_CAMEL_CASE': (f) => transformText(f, t => t.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, c) => c.toUpperCase())),
+  'URL_ENCODE': async (f) => createResult(encodeURIComponent(await f.text()), f.name, 'text/plain'),
+  'URL_DECODE': async (f) => createResult(decodeURIComponent(await f.text()), f.name, 'text/plain'),
   'IMAGE_TO_PDF': async (f) => generateImagePdf(f),
   'PDF_TO_PNG': async (f) => rasterizePdf(f),
+  'BASE64_ENCODE': async (f) => {
+    const buffer = await f.arrayBuffer();
+    const binary = Array.from(new Uint8Array(buffer)).map(b => String.fromCharCode(b)).join('');
+    return createResult(btoa(binary), f.name + '.b64', 'text/plain');
+  },
+  'BASE64_DECODE': async (f) => {
+    const text = await f.text();
+    const binary = atob(text.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return createResult(new Blob([bytes]), replaceExt(f.name, 'bin'), 'application/octet-stream');
+  },
+  'FILE_TO_ZIP': async (f) => {
+    // @ts-ignore
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+    zip.file(f.name, f);
+    const blob = await zip.generateAsync({ type: 'blob' });
+    return createResult(blob, f.name + '.zip', 'application/zip');
+  },
+  'PASSTHROUGH': async (f) => createResult(f, f.name, f.type)
 };
 
 async function processDocx(file: File, mode: 'html' | 'text' | 'markdown'): Promise<ConversionResult> {

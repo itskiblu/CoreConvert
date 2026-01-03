@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FileItem, ConversionStatus, ConversionType } from './types';
 import { 
@@ -230,19 +229,14 @@ export default function App() {
     // Reset progress and set status
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: ConversionStatus.PROCESSING, progress: 0 } : f));
 
-    // Simulate progress: Increment every 20ms (50fps) for very smooth feedback
+    // Simulate progress
     const intervalId = setInterval(() => {
       setFiles(prev => prev.map(f => {
         if (f.id === id && f.status === ConversionStatus.PROCESSING) {
-          // Cap at 95% so it never finishes before the actual process
           const target = 95;
           if (f.progress >= target) return f;
-
-          // Asymptotic approach to target
           const remaining = target - f.progress;
-          // Slow down as we get closer to 95%
           const increment = Math.max(0.1, remaining * 0.05);
-          
           return { ...f, progress: Math.min(target, f.progress + increment) };
         }
         return f;
@@ -253,16 +247,19 @@ export default function App() {
       let result = null;
       const type = item.type;
       
-      // Allow initial render cycle to update UI before heavy work
       await new Promise(r => setTimeout(r, 10));
       
-      // Route based on category
       if (type.startsWith('IMAGE_')) {
          result = await convertImageFile(item.file, type);
       } else if (
         type.startsWith('DOCX_') ||
         type.startsWith('TEXT_') ||
-        type.startsWith('PDF_')
+        type.startsWith('PDF_') ||
+        type.startsWith('URL_') ||
+        type.startsWith('BASE64_') ||
+        type.includes('_MINIFY') ||
+        type === 'FILE_TO_ZIP' ||
+        type === 'PASSTHROUGH'
       ) {
         result = await convertDocumentFile(item.file, type);
       } else if (type.startsWith('DATA_')) {
@@ -278,8 +275,7 @@ export default function App() {
       } else if (type.startsWith('FONT_')) {
         result = await convertFontFile(item.file, type);
       } else {
-        // Fallback for types not yet fully implemented in this update
-        await new Promise(r => setTimeout(r, 1000)); // Simulating work
+        await new Promise(r => setTimeout(r, 1000));
         result = {
           url: URL.createObjectURL(item.file),
           name: `converted_${item.file.name}`,
@@ -335,7 +331,6 @@ export default function App() {
 
     setIsZipping(true);
     try {
-      // @ts-ignore - Dynamically loaded to reduce initial bundle size
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
       const promises = completedFiles.map(async (item) => {
@@ -371,7 +366,6 @@ export default function App() {
 
   const globalStatus = getGlobalStatus();
 
-  // Update title based on status
   useEffect(() => {
     document.title = `CoreConvert | ${globalStatus.label}`;
   }, [globalStatus.label]);
@@ -389,7 +383,6 @@ export default function App() {
     }`;
   };
 
-  // Callback to trigger triggerNotification in child components
   const onSuccessClick = useCallback(() => triggerNotification('success'), [triggerNotification]);
 
   const handleModalKeyDown = (e: React.KeyboardEvent) => {
@@ -398,7 +391,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Unsupported File Modal Overlay */}
       {unsupportedFileName && (
         <div 
           ref={modalRef}
@@ -448,7 +440,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Header Bar */}
       <header className="mb-8 md:mb-14 flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
         <a 
           href="#home"
@@ -494,11 +485,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Routing Logic */}
       {currentView === 'home' && (
         <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center mb-12">
-          
-          {/* INPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col" aria-label="Input Files">
             <div className="flex items-center gap-3 mb-3">
               <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-1.5 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
@@ -559,7 +547,6 @@ export default function App() {
             </div>
           </section>
 
-          {/* ACTION CENTER */}
           <div className="flex flex-col items-center justify-center py-1 lg:py-0 shrink-0">
              <button 
                onClick={convertAll}
@@ -576,7 +563,6 @@ export default function App() {
              </button>
           </div>
 
-          {/* OUTPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col" aria-label="Output Files">
             <div className="flex items-center gap-3 mb-3 justify-end">
               {completedCount > 1 && (
@@ -697,7 +683,6 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Toast Notifications */}
       <div 
         className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"
         role="status" 
