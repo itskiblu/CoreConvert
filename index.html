@@ -7,17 +7,11 @@
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
-    <!-- Preconnect to critical origins with crossorigin where applicable -->
+    <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
-    
-    <!-- Module preload for critical dependencies to flatten the request chain -->
-    <link rel="modulepreload" href="https://esm.sh/react@^19.2.3">
-    <link rel="modulepreload" href="https://esm.sh/react-dom@^19.2.3">
-    <link rel="modulepreload" href="https://esm.sh/react-dom@^19.2.3/client">
-    <link rel="modulepreload" href="https://esm.sh/scheduler@^0.27.0?target=es2022">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     
     <!-- Preload critical fonts with high priority -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
@@ -25,7 +19,7 @@
 
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Tailwind is render-blocking; using fetchpriority to speed up download -->
+    <!-- Tailwind standalone script with fetchpriority to mitigate render-blocking delay -->
     <script src="https://cdn.tailwindcss.com" fetchpriority="high"></script>
     <script>
         tailwind.config = {
@@ -43,12 +37,7 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "jszip": "https://esm.sh/jszip@^3.10.1",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "three": "https://esm.sh/three@0.160.0",
     "three/": "https://esm.sh/three@0.160.0/",
     "heic2any": "https://esm.sh/heic2any@0.0.4",
@@ -68,6 +57,10 @@
     "opentype.js": "https://esm.sh/opentype.js@1.3.4",
     "lamejs": "https://esm.sh/lamejs@1.2.1",
     "xlsx": "https://esm.sh/xlsx@0.18.5",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
