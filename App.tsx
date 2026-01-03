@@ -1,6 +1,4 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import JSZip from 'jszip';
 import { FileItem, ConversionStatus, ConversionType } from './types';
 import { 
   CONVERSION_OPTIONS, 
@@ -302,7 +300,13 @@ export default function App() {
 
     setIsZipping(true);
     try {
+      // Lazy load JSZip to reduce initial unused JS and improve first paint
+      const JSZipModule = await import('jszip');
+      // @ts-ignore - Handle mixed module types for constructor which confuses TS
+      const JSZip = JSZipModule.default || JSZipModule;
+      // @ts-ignore - The resolved type might still trigger "not constructable" error
       const zip = new JSZip();
+      
       const promises = completedFiles.map(async (item) => {
         if (!item.resultUrl || !item.resultName) return;
         const response = await fetch(item.resultUrl);
