@@ -7,32 +7,21 @@
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
-    <!-- Origin Warming for high-latency mobile networks -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="dns-prefetch" href="https://esm.sh">
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-
-    <!-- Preconnect to critical origins with correct CORS attributes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     
-    <!-- Parallelize JS discovery to flatten the dependency tree waterfall -->
-    <link rel="modulepreload" href="./index.tsx">
-    <link rel="modulepreload" href="https://esm.sh/react@^19.2.3">
-    <link rel="modulepreload" href="https://esm.sh/react-dom@^19.2.3">
-    
-    <!-- Preload critical fonts with high priority -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Tailwind standalone script with fetchpriority to mitigate render-blocking delay -->
-    <script src="https://cdn.tailwindcss.com" fetchpriority="high"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Set initial theme correctly to prevent dark mode flicker
+        if (localStorage.getItem('core-dark-mode') === 'true' || 
+            (!('core-dark-mode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -70,8 +59,8 @@
     "xlsx": "https://esm.sh/xlsx@0.18.5",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
@@ -98,6 +87,8 @@
             background-color: var(--bg-color);
             background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
             background-size: 20px 20px;
+            margin: 0;
+            padding: 0;
         }
         
         .neubrutal-shadow {
