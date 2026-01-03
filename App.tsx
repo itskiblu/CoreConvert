@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FileItem, ConversionStatus, ConversionType } from './types';
 import { 
@@ -14,14 +15,6 @@ import {
   isDocx,
   isPresentation,
 } from './constants';
-import { convertImageFile } from './utils/imageUtils';
-import { convertDocumentFile } from './utils/pdfUtils';
-import { convertDataFile } from './utils/dataUtils';
-import { convertPresentationFile } from './utils/presentationUtils';
-import { convertAudioFile } from './utils/audioUtils';
-import { convertVideoFile } from './utils/videoUtils';
-import { convertModelFile } from './utils/modelUtils';
-import { convertFontFile } from './utils/fontUtils';
 
 import { ConversionCard } from './components/ConversionCard';
 import { PrivacyContent } from './components/PrivacyContent';
@@ -219,8 +212,7 @@ export default function App() {
 
   /**
    * Core Logic Switch.
-   * Routes the conversion request to the appropriate utility function
-   * based on the selected ConversionType.
+   * Uses dynamic imports for all utility modules to optimize initial load time.
    */
   const processConversion = useCallback(async (id: string) => {
     const item = filesRef.current.find(f => f.id === id);
@@ -247,9 +239,11 @@ export default function App() {
       let result = null;
       const type = item.type;
       
-      await new Promise(r => setTimeout(r, 10));
+      // Delay slightly for UI responsiveness
+      await new Promise(r => setTimeout(r, 20));
       
       if (type.startsWith('IMAGE_')) {
+         const { convertImageFile } = await import('./utils/imageUtils');
          result = await convertImageFile(item.file, type);
       } else if (
         type.startsWith('DOCX_') ||
@@ -261,18 +255,25 @@ export default function App() {
         type === 'FILE_TO_ZIP' ||
         type === 'PASSTHROUGH'
       ) {
+        const { convertDocumentFile } = await import('./utils/pdfUtils');
         result = await convertDocumentFile(item.file, type);
       } else if (type.startsWith('DATA_')) {
+        const { convertDataFile } = await import('./utils/dataUtils');
         result = await convertDataFile(item.file, type);
       } else if (type.startsWith('PRESENTATION_')) {
+        const { convertPresentationFile } = await import('./utils/presentationUtils');
         result = await convertPresentationFile(item.file, type);
       } else if (type.startsWith('AUDIO_')) {
+        const { convertAudioFile } = await import('./utils/audioUtils');
         result = await convertAudioFile(item.file, type);
       } else if (type.startsWith('VIDEO_')) {
+        const { convertVideoFile } = await import('./utils/videoUtils');
         result = await convertVideoFile(item.file, type);
       } else if (type.startsWith('MODEL_')) {
+        const { convertModelFile } = await import('./utils/modelUtils');
         result = await convertModelFile(item.file, type);
       } else if (type.startsWith('FONT_')) {
+        const { convertFontFile } = await import('./utils/fontUtils');
         result = await convertFontFile(item.file, type);
       } else {
         await new Promise(r => setTimeout(r, 1000));
