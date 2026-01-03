@@ -7,9 +7,11 @@
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
+    <!-- Preconnect to speed up font and library loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
@@ -62,10 +64,10 @@
     "xlsx": "https://esm.sh/xlsx@0.18.5",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
     "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3"
   }
 }
 </script>
@@ -86,12 +88,13 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--bg-color);
             background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
             background-size: 20px 20px;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
         }
         
         .neubrutal-shadow {
@@ -149,10 +152,23 @@
             outline-offset: 2px !important;
             z-index: 50;
         }
+
+        /* Prevent Layout Shift by giving the root a minimum height */
+        #root {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
     </style>
 </head>
 <body class="min-h-screen">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
+    <script>
+        // Remove the no-transition class after the page has had a chance to render
+        window.addEventListener('load', () => {
+            document.documentElement.classList.remove('no-transition');
+        });
+    </script>
 </body>
 </html>
