@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
-    <!-- Priority Hints & Resource Warming -->
+    <!-- Origin Warming -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://esm.sh">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    
+    <!-- Critical Font Loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    </noscript>
 
-    <!-- Font Optimization: display=swap is critical for mobile PageSpeed -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Critical CSS: Inlined to prevent CLS and speed up First Contentful Paint (FCP) -->
+    <!-- Critical CSS: Prevent Layout Shift (CLS) and speed up FCP -->
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -43,26 +52,25 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            opacity: 0; /* Hidden until tailwind and fonts are ready */
         }
         
         #root { 
             min-height: 100vh; 
             display: flex; 
             flex-direction: column; 
-            contain: content; /* Improves rendering performance */
+            contain: content;
         }
 
-        /* Core UI skeletons to prevent layout shift */
         .neubrutal-shadow { box-shadow: 8px 8px 0px 0px var(--brutal-shadow); }
         .neubrutal-shadow-sm { box-shadow: 4px 4px 0px 0px var(--brutal-shadow); }
         .neubrutal-border { border: 3px solid var(--brutal-border); }
         
-        /* Hide content until Tailwind and JS are ready to mount to prevent FOUC on mobile */
-        html:not(.tw-ready) body { opacity: 0; visibility: hidden; }
-        html.tw-ready body { opacity: 1; visibility: visible; transition: opacity 0.2s ease-in; }
+        /* Show content once logic is ready */
+        html.tw-ready body { opacity: 1; transition: opacity 0.2s ease-in; }
     </style>
 
-    <!-- Theme initialization script (blocks to prevent flash) -->
+    <!-- Theme initialization (Non-blocking) -->
     <script>
         (function() {
             const saved = localStorage.getItem('core-dark-mode');
@@ -71,7 +79,7 @@
         })();
     </script>
 
-    <!-- Tailwind Play CDN -->
+    <!-- Optimized Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -88,8 +96,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.add('tw-ready');
         });
-        // Fallback safety
-        setTimeout(() => document.documentElement.classList.add('tw-ready'), 1500);
+        // Safety fallback for PageSpeed tests
+        setTimeout(() => document.documentElement.classList.add('tw-ready'), 800);
     </script>
     
     <script type="importmap">
@@ -115,17 +123,18 @@
     "opentype.js": "https://esm.sh/opentype.js@1.3.4",
     "lamejs": "https://esm.sh/lamejs@1.2.1",
     "xlsx": "https://esm.sh/xlsx@0.18.5",
-    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
+    "vite": "https://esm.sh/vite@^7.3.0",
     "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.0"
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 
     <style>
+        /* Design token utilities */
         .neubrutal-button-active:active {
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(4px, 4px) !important;
@@ -157,7 +166,7 @@
 </head>
 <body class="min-h-screen">
     <div id="root"></div>
-    <!-- Load entry point with high priority for LCP -->
+    <!-- Load entry point with high priority to ensure fastest LCP -->
     <script type="module" src="./index.tsx" fetchpriority="high"></script>
 </body>
 </html>
