@@ -195,11 +195,6 @@ export default function App() {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, type } : f));
   }, []);
 
-  /**
-   * Core Logic Switch with Dynamic Imports.
-   * This reduces the initial bundle size significantly by only loading 
-   * conversion engines when they are actually needed.
-   */
   const processConversion = useCallback(async (id: string) => {
     const item = filesRef.current.find(f => f.id === id);
     if (!item || item.status === ConversionStatus.PROCESSING) return;
@@ -225,7 +220,6 @@ export default function App() {
       
       await new Promise(r => setTimeout(r, 10));
       
-      // Dynamic Routing to save on initial bundle size
       if (type.startsWith('IMAGE_')) {
          const { convertImageFile } = await import('./utils/imageUtils');
          result = await convertImageFile(item.file, type);
@@ -352,7 +346,7 @@ export default function App() {
 
   const getLinkClass = (view: string) => {
     const isActive = currentView === view;
-    return `text-[10px] font-black uppercase px-2 py-0.5 outline-none transition-all duration-100 ${
+    return `text-[10px] font-black uppercase px-2 py-2 md:py-0.5 outline-none transition-all duration-100 ${
       isActive 
         ? 'bg-black text-brutalYellow dark:bg-white dark:text-black neubrutal-shadow-sm border border-black dark:border-white' 
         : 'text-black dark:text-white hover:underline decoration-2'
@@ -366,7 +360,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto overflow-x-hidden">
       {unsupportedFileName && (
         <div 
           ref={modalRef}
@@ -385,13 +379,9 @@ export default function App() {
             >
               <ICONS.X />
             </button>
-            <button 
-              onClick={() => triggerNotification('alert')}
-              className="w-12 h-12 bg-red-500 neubrutal-border neubrutal-shadow-sm neubrutal-button-active flex items-center justify-center mb-6 outline-none"
-              aria-label="Trigger test alert"
-            >
-               <span className="text-white font-black text-2xl" aria-hidden="true">!</span>
-            </button>
+            <div className="w-12 h-12 bg-red-500 neubrutal-border neubrutal-shadow-sm flex items-center justify-center mb-6 outline-none" aria-hidden="true">
+               <span className="text-white font-black text-2xl">!</span>
+            </div>
             <h3 id="unsupported-modal-title" className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mb-2">Unsupported Type</h3>
             <p id="unsupported-modal-desc" className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-6 uppercase leading-tight">
               The file <span className="text-black dark:text-white underline">{unsupportedFileName}</span> is not currently supported for deep conversion tasks.
@@ -401,13 +391,13 @@ export default function App() {
                 href="https://github.com/itskiblu/CoreConvert" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-full bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm p-3 font-black text-center text-xs uppercase tracking-widest hover:brightness-105 transition-all outline-none"
+                className="w-full bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm p-4 font-black text-center text-xs uppercase tracking-widest hover:brightness-105 transition-all outline-none"
               >
                 Request Support on GitHub
               </a>
               <button 
                 onClick={() => setUnsupportedFileName(null)}
-                className="w-full bg-black text-white dark:bg-white dark:text-black neubrutal-border neubrutal-shadow-sm p-3 font-black text-xs uppercase tracking-widest outline-none"
+                className="w-full bg-black text-white dark:bg-white dark:text-black neubrutal-border neubrutal-shadow-sm p-4 font-black text-xs uppercase tracking-widest outline-none"
               >
                 Close
               </button>
@@ -423,7 +413,7 @@ export default function App() {
             e.preventDefault();
             setCurrentView('home');
           }}
-          className="flex items-center gap-4 bg-brutalYellow neubrutal-border neubrutal-shadow p-3 md:p-4 neubrutal-button-active-lg outline-none cursor-pointer decoration-0"
+          className="flex items-center gap-4 bg-brutalYellow neubrutal-border neubrutal-shadow p-4 md:p-4 neubrutal-button-active-lg outline-none cursor-pointer decoration-0"
           aria-label="Go to Home"
         >
           <div className="w-8 h-8 md:w-10 md:h-10 bg-black flex items-center justify-center text-brutalYellow flex-shrink-0" aria-hidden="true">
@@ -432,17 +422,17 @@ export default function App() {
           <h1 className="text-2xl md:text-3xl font-black text-black tracking-tighter uppercase leading-none">CORECONVERT</h1>
         </a>
         
-        <div className="flex items-center gap-3 md:gap-4 h-9 md:h-10">
+        <div className="flex items-center gap-3 md:gap-4 h-12 md:h-10">
           <div 
             role="status"
-            className="h-full bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm px-3 md:px-4 flex items-center font-black text-[10px] md:text-xs uppercase text-black dark:text-white"
+            className="h-full bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm px-4 flex items-center font-black text-[10px] md:text-xs uppercase text-black dark:text-white whitespace-nowrap"
           >
             STATUS: <span className={`ml-1 ${globalStatus.color}`}>{globalStatus.label}</span>
           </div>
 
           <button 
             onClick={toggleTheme}
-            className="h-full px-3 md:px-4 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black neubrutal-border neubrutal-shadow-sm flex items-center justify-center font-black text-[10px] md:text-xs uppercase neubrutal-button-active flex-shrink-0 outline-none"
+            className="h-full px-4 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black neubrutal-border neubrutal-shadow-sm flex items-center justify-center font-black text-[10px] md:text-xs uppercase neubrutal-button-active flex-shrink-0 outline-none"
             aria-pressed={isDarkMode}
             aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
           >
@@ -452,7 +442,7 @@ export default function App() {
           {currentView === 'home' && (
             <button 
               onClick={() => setFiles([])}
-              className="h-full px-3 md:px-4 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-red-500 hover:text-white dark:hover:bg-red-600 neubrutal-border neubrutal-shadow-sm flex items-center justify-center font-black text-[10px] md:text-xs uppercase neubrutal-button-active flex-shrink-0 outline-none"
+              className="h-full px-4 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-red-500 hover:text-white dark:hover:bg-red-600 neubrutal-border neubrutal-shadow-sm flex items-center justify-center font-black text-[10px] md:text-xs uppercase neubrutal-button-active flex-shrink-0 outline-none"
               aria-label="Reset all files and start over"
             >
               Reset
@@ -462,16 +452,16 @@ export default function App() {
       </header>
 
       {currentView === 'home' && (
-        <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center mb-12">
+        <main className="flex-1 flex flex-col lg:flex-row gap-8 lg:gap-10 items-center justify-center mb-12">
           <section className="w-full max-w-[480px] flex flex-col" aria-label="Input Files">
             <div className="flex items-center gap-3 mb-3">
-              <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-1.5 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
+              <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-2 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
                 INPUT
               </h2>
             </div>
             
             <div className="w-full relative pt-[100%]">
-              <div className="absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-3 md:p-4">
+              <div className="absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-4">
                 <div 
                   className={`flex-1 min-h-0 flex flex-col relative outline-none ${inputFiles.length === 0 ? 'border-[3px] border-dashed border-black/30 dark:border-white/30' : 'border-none'}`}
                   tabIndex={-1}
@@ -487,15 +477,15 @@ export default function App() {
                       <div className="w-14 h-14 bg-black dark:bg-white text-brutalYellow dark:text-black mb-5 neubrutal-border neubrutal-shadow-sm flex items-center justify-center neubrutal-target" aria-hidden="true">
                         <ICONS.Upload />
                       </div>
-                      <p className="text-lg font-black uppercase tracking-tight text-black dark:text-white">Click or Drag Files</p>
-                      <p className="text-[10px] font-black text-gray-700 dark:text-gray-300 mt-1.5 uppercase tracking-[0.2em]">Local Browser Processing</p>
+                      <p className="text-xl font-black uppercase tracking-tight text-black dark:text-white">Click or Drag Files</p>
+                      <p className="text-[10px] font-black text-gray-700 dark:text-gray-300 mt-2 uppercase tracking-[0.2em]">Local Browser Processing</p>
                     </button>
                   ) : (
                     <div className="flex flex-col h-full overflow-hidden">
-                      <div className="shrink-0 mb-3 px-2 py-2">
+                      <div className="shrink-0 mb-3">
                         <button 
                           onClick={() => fileInputRef.current?.click()}
-                          className="w-full flex items-center justify-center gap-2 p-2.5 bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm neubrutal-button-active cursor-pointer outline-none"
+                          className="w-full flex items-center justify-center gap-2 p-3 bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm neubrutal-button-active cursor-pointer outline-none"
                         >
                           <div className="w-5 h-5 flex items-center justify-center scale-75" aria-hidden="true">
                             <ICONS.Upload />
@@ -503,7 +493,7 @@ export default function App() {
                           <span className="font-black text-xs uppercase tracking-widest leading-none">Add More Files</span>
                         </button>
                       </div>
-                      <ul className="flex-1 min-h-0 px-2 pb-3 space-y-3 overflow-y-auto custom-scrollbar list-none m-0">
+                      <ul className="flex-1 min-h-0 space-y-3 overflow-y-auto custom-scrollbar list-none m-0 pr-1">
                         {inputFiles.map(item => (
                           <li key={item.id}>
                             <ConversionCard 
@@ -523,16 +513,16 @@ export default function App() {
             </div>
           </section>
 
-          <div className="flex flex-col items-center justify-center py-1 lg:py-0 shrink-0">
+          <div className="flex flex-col items-center justify-center py-2 lg:py-0 shrink-0">
              <button 
                onClick={convertAll}
                disabled={inputFiles.length === 0}
                title="Run Conversion"
                aria-label="Run all conversions"
-               className={`p-4 md:p-6 neubrutal-trigger outline-none ${inputFiles.length === 0 ? 'opacity-20 grayscale cursor-not-allowed' : ''}`}
+               className={`p-6 md:p-6 neubrutal-trigger outline-none ${inputFiles.length === 0 ? 'opacity-20 grayscale cursor-not-allowed' : ''}`}
              >
-               <div className="bg-black dark:bg-white text-brutalYellow dark:text-black p-4 md:p-5 neubrutal-shadow-sm neubrutal-target" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 md:w-10 md:h-10 rotate-90 lg:rotate-0">
+               <div className="bg-black dark:bg-white text-brutalYellow dark:text-black p-5 md:p-5 neubrutal-shadow-sm neubrutal-target" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 md:w-10 md:h-10 rotate-90 lg:rotate-0">
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" />
                   </svg>
                </div>
@@ -545,20 +535,20 @@ export default function App() {
                 <button 
                   onClick={downloadAll}
                   disabled={isZipping}
-                  className="bg-brutalYellow text-black px-3 py-1.5 font-black text-[10px] tracking-tighter uppercase neubrutal-border neubrutal-shadow-sm neubrutal-button-active flex items-center gap-1.5 disabled:opacity-50 outline-none"
+                  className="bg-brutalYellow text-black px-4 py-2 font-black text-[10px] tracking-tighter uppercase neubrutal-border neubrutal-shadow-sm neubrutal-button-active flex items-center gap-2 disabled:opacity-50 outline-none"
                 >
                   {isZipping ? 'ZIPPING...' : `Export All (${completedCount})`} 
                   {!isZipping && <div className="scale-75" aria-hidden="true"><ICONS.Download /></div>}
                 </button>
               )}
-              <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-1.5 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
+              <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-2 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
                 OUTPUT
               </h2>
             </div>
             
             <div className="w-full relative pt-[100%]">
-              <div className="absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-3 md:p-4">
-                <div className="flex-1 min-h-0 px-1 overflow-y-auto custom-scrollbar">
+              <div className="absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-4">
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
                   {outputFiles.length > 0 ? (
                     <ul className="space-y-3 list-none m-0 p-0">
                       {outputFiles.map(item => (
@@ -611,19 +601,19 @@ export default function App() {
 
       <footer className="mt-auto pt-10 pb-6 border-t-4 border-black dark:border-white">
         <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
-          <div className="flex flex-col gap-2 items-center md:items-start text-center md:text-left">
+          <div className="flex flex-col gap-3 items-center md:items-start text-center md:text-left">
             <div className="flex items-center gap-3 justify-center md:justify-start">
-              <span className="bg-black dark:bg-white text-brutalYellow dark:text-black px-3 py-1 text-[10px] font-black uppercase tracking-widest neubrutal-shadow-sm">
+              <span className="bg-black dark:bg-white text-brutalYellow dark:text-black px-4 py-1.5 text-[10px] font-black uppercase tracking-widest neubrutal-shadow-sm">
                 PRIVATE & SECURE
               </span>
             </div>
-            <p className="text-[11px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight max-w-sm md:max-w-none">
-              Files are processed locally in your browser. Your data never leaves your device.
+            <p className="text-[11px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight max-w-sm md:max-w-none leading-relaxed">
+              Files are processed locally in your browser. Your data never leaves your device. No uploads, no servers, total control.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-4 md:gap-8 items-center justify-center md:justify-end">
-            <nav className="flex gap-2 md:gap-4 items-center justify-center">
+            <nav className="flex flex-wrap gap-2 md:gap-4 items-center justify-center">
               <button 
                 onClick={() => setCurrentView('about')}
                 className={getLinkClass('about')}
@@ -648,9 +638,9 @@ export default function App() {
               >
                 System Check
               </button>
-              <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-black dark:text-white uppercase hover:underline decoration-2 px-2">GitHub</a>
+              <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-black dark:text-white uppercase hover:underline decoration-2 px-3 py-2">GitHub</a>
             </nav>
-            <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm p-2 px-3">
+            <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm p-3">
               <span className="text-[10px] font-black text-black dark:text-white uppercase tracking-tighter">
                 &copy; {new Date().getFullYear()} CORECONVERT
               </span>
@@ -668,7 +658,7 @@ export default function App() {
           <div 
             key={n.id}
             onClick={() => removeNotification(n.id)}
-            className={`${n.type === 'alert' ? 'bg-red-500' : 'bg-green-400'} text-black neubrutal-border neubrutal-shadow-sm w-16 h-16 flex flex-col items-center justify-center pointer-events-auto cursor-pointer group`}
+            className={`${n.type === 'alert' ? 'bg-red-500' : 'bg-green-400'} text-black neubrutal-border neubrutal-shadow-sm w-16 h-16 flex flex-col items-center justify-center pointer-events-auto cursor-pointer group animate-snappy`}
           >
             {n.type === 'alert' ? (
               <span className="text-white font-black text-2xl" aria-hidden="true">!</span>

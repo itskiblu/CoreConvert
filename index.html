@@ -3,34 +3,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoreConvert | Local File Converter</title>
-    <meta name="description" content="CoreConvert is a professional-grade, local-first file converter. Privacy-focused processing for images, documents, audio, video, and data entirely in your browser. No uploads, total privacy.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CoreConvert | Professional Local-First File Converter</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="CoreConvert | Local File Converter">
+    <meta name="description" content="Professional-grade, local-first file converter. Privacy-focused processing for images, documents, audio, and data entirely in your browser. No uploads, total privacy.">
     <meta name="theme-color" content="#FAFF00">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://core-convert.pages.dev/">
+    <meta property="og:title" content="CoreConvert | Local File Converter">
+    <meta property="og:description" content="Privacy-focused, browser-based file conversion. No servers, no uploads.">
+    <meta property="og:image" content="data:image/svg+xml,%3Csvg width='1200' height='630' viewBox='0 0 1200 630' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1200' height='630' fill='%23FAFF00'/%3E%3Cpath d='M400 200H800V500H400V200Z' fill='black'/%3E%3C/svg%3E">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="CoreConvert | Local File Converter">
+    <meta property="twitter:description" content="Privacy-focused, browser-based file conversion. No servers, no uploads.">
+
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Non-blocking Google Fonts pattern -->
+    <!-- Preconnect to improve performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    </noscript>
+    <link rel="preconnect" href="https://esm.sh">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brutalYellow: '#FAFF00',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Critical CSS Variables -->
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -38,78 +38,57 @@
             --brutal-shadow: #000000;
             --brutal-border: #000000;
         }
-        
         .dark {
             --bg-color: #0a0a0a;
             --dot-color: #222222;
             --brutal-shadow: #ffffff;
             --brutal-border: #ffffff;
         }
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+    </style>
 
+    <!-- Deferred Tailwind for performance -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script>
+        window.addEventListener('load', function() {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            brutalYellow: '#FAFF00',
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <!-- Optimized Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
             background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        
-        .neubrutal-shadow {
-            box-shadow: 8px 8px 0px 0px var(--brutal-shadow);
-        }
-        .neubrutal-shadow-sm {
-            box-shadow: 4px 4px 0px 0px var(--brutal-shadow);
-        }
-        
-        .neubrutal-button-active:active {
-            box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
-            transform: translate(4px, 4px) !important;
-        }
-        
-        .neubrutal-button-active-lg:active {
-            box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
-            transform: translate(8px, 8px) !important;
-        }
-
-        .neubrutal-trigger:active .neubrutal-target {
-            box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
-            transform: translate(4px, 4px) !important;
-        }
-
-        .neubrutal-border {
-            border: 3px solid var(--brutal-border);
-        }
-        
-        .brutal-text-stroke {
-            -webkit-text-stroke: 1.5px black;
-        }
-        .dark .brutal-text-stroke {
-            -webkit-text-stroke: 1.5px black;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-          border-left: 2px solid var(--brutal-border);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--brutal-border);
-          border: 1px solid var(--bg-color);
-        }
-
-        .no-transition *:not(.animate-snappy) {
-            transition: none !important;
-        }
-        
-        .animate-snappy {
-            transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
-        }
-
-        *:focus-visible {
-            outline: 4px solid var(--brutal-border) !important;
-            outline-offset: 2px !important;
-            z-index: 50;
+        .neubrutal-shadow { box-shadow: 8px 8px 0px 0px var(--brutal-shadow); }
+        .neubrutal-shadow-sm { box-shadow: 4px 4px 0px 0px var(--brutal-shadow); }
+        .neubrutal-button-active:active { box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important; transform: translate(4px, 4px) !important; }
+        .neubrutal-button-active-lg:active { box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important; transform: translate(8px, 8px) !important; }
+        .neubrutal-border { border: 3px solid var(--brutal-border); }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-left: 2px solid var(--brutal-border); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--brutal-border); border: 1px solid var(--bg-color); }
+        .animate-snappy { transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1); }
+        *:focus-visible { outline: 4px solid var(--brutal-border) !important; outline-offset: 2px !important; z-index: 50; }
+        @media (max-width: 640px) {
+            .neubrutal-shadow { box-shadow: 4px 4px 0px 0px var(--brutal-shadow); }
         }
     </style>
 
@@ -145,7 +124,7 @@
 }
 </script>
 </head>
-<body class="min-h-screen no-transition">
+<body class="min-h-screen">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
 </body>
