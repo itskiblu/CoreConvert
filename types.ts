@@ -1,6 +1,9 @@
-
 /**
  * Represents the current lifecycle state of a file within the application.
+ * IDLE: File added but not started.
+ * PROCESSING: Currently being converted.
+ * COMPLETED: Conversion successful, download ready.
+ * FAILED: Error occurred during processing.
  */
 export enum ConversionStatus {
   IDLE = 'IDLE',
@@ -11,6 +14,8 @@ export enum ConversionStatus {
 
 /**
  * Union type representing all supported conversion operations.
+ * Refactored to be Input-Agnostic.
+ * e.g. 'IMAGE_TO_PNG' handles JPG, HEIC, PSD, TIFF, etc. as inputs.
  */
 export type ConversionType = 
   // Images
@@ -35,10 +40,11 @@ export type ConversionType =
   // Fonts
   | 'FONT_TO_TTF' | 'FONT_TO_OTF' | 'FONT_TO_WOFF' | 'FONT_TO_JSON' | 'FONT_TO_CSS'
   // Utilities
-  | 'PDF_TO_PNG' | 'BASE64_ENCODE' | 'BASE64_DECODE' | 'FILE_TO_ZIP' | 'PASSTHROUGH'
-  // --- AI SMART TASKS (New) ---
-  | 'AI_SUMMARIZE' | 'AI_TRANSLATE_EN' | 'AI_DESCRIBE_IMAGE' | 'AI_DATA_TO_CODE' | 'AI_TRANSCRIPT';
+  | 'PDF_TO_PNG' | 'BASE64_ENCODE' | 'BASE64_DECODE' | 'FILE_TO_ZIP' | 'PASSTHROUGH';
 
+/**
+ * Interface representing a file in the conversion queue.
+ */
 export interface FileItem {
   id: string;
   file: File;
@@ -51,6 +57,9 @@ export interface FileItem {
   error?: string;
 }
 
+/**
+ * Interface for conversion task configuration.
+ */
 export interface ConversionOption {
   value: ConversionType;
   label: string;
