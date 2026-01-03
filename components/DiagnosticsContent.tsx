@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { ICONS, CONVERSION_OPTIONS } from '../constants';
 import { convertImageFile } from '../utils/imageUtils';
 import { convertDocumentFile } from '../utils/pdfUtils';
-import { jsPDF } from 'jspdf';
 
 interface DiagnosticsContentProps {
   onBack: () => void;
@@ -60,6 +59,7 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
          if (type === 'PDF_TO_PNG') {
              // Generate a valid PDF using jsPDF for testing
              // @ts-ignore
+             const { jsPDF } = await import('jspdf');
              const doc = new jsPDF();
              doc.text("Diagnostics Test PDF", 10, 10);
              const pdfBlob = doc.output('blob');
@@ -80,7 +80,6 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
 
       // 3. Data Mocks
       if (category === 'Data') {
-          // Most data tests rely on non-implemented logic in this demo, but we provide file anyway
           if (type.includes('JSON')) return new File(['{"test": true}'], 'mock.json', { type: 'application/json' });
           if (type.includes('CSV')) return new File(['a,b\n1,2'], 'mock.csv', { type: 'text/csv' });
           return new File(['dummy data'], 'mock.dat', { type: 'text/plain' });
@@ -125,7 +124,7 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
         continue;
       }
 
-      // 2. Run Conversion Logic (Mirroring App.tsx routing)
+      // 2. Run Conversion Logic
       try {
         let result = null;
         const type = test.id as any;

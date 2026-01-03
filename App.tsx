@@ -1,6 +1,5 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import JSZip from 'jszip';
 import { FileItem, ConversionStatus, ConversionType } from './types';
 import { 
   CONVERSION_OPTIONS, 
@@ -336,6 +335,8 @@ export default function App() {
 
     setIsZipping(true);
     try {
+      // @ts-ignore - Dynamically loaded to reduce initial bundle size
+      const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
       const promises = completedFiles.map(async (item) => {
         if (!item.resultUrl || !item.resultName) return;
