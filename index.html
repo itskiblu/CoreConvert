@@ -7,15 +7,17 @@
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
-    <!-- Preconnect to critical origins -->
+    <!-- Preconnect to critical origins with crossorigin where applicable -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://esm.sh">
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://esm.sh" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     
     <!-- Module preload for critical dependencies to flatten the request chain -->
     <link rel="modulepreload" href="https://esm.sh/react@^19.2.3">
     <link rel="modulepreload" href="https://esm.sh/react-dom@^19.2.3">
+    <link rel="modulepreload" href="https://esm.sh/react-dom@^19.2.3/client">
+    <link rel="modulepreload" href="https://esm.sh/scheduler@^0.27.0?target=es2022">
     
     <!-- Preload critical fonts with high priority -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
@@ -23,7 +25,7 @@
 
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Tailwind is render-blocking but critical -->
+    <!-- Tailwind is render-blocking; using fetchpriority to speed up download -->
     <script src="https://cdn.tailwindcss.com" fetchpriority="high"></script>
     <script>
         tailwind.config = {
