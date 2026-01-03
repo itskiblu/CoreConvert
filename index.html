@@ -7,71 +7,20 @@
     <title>CoreConvert | Private Local File Converter</title>
     <meta name="description" content="CoreConvert: A powerful, private, and local-first file conversion utility. Convert images, documents, audio, video, and data directly in your browser with zero uploads.">
     
-    <!-- Preconnect to speed up font and library loading -->
+    <!-- Origin Warming -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://esm.sh">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://esm.sh" crossorigin>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- Theme initialization script (blocking but tiny) to prevent theme flash -->
-    <script>
-        (function() {
-            const saved = localStorage.getItem('core-dark-mode');
-            const isDark = saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (isDark) document.documentElement.classList.add('dark');
-        })();
-    </script>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brutalYellow: '#FAFF00',
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <script type="importmap">
-{
-  "imports": {
-    "jszip": "https://esm.sh/jszip@^3.10.1",
-    "three": "https://esm.sh/three@0.160.0",
-    "three/": "https://esm.sh/three@0.160.0/",
-    "heic2any": "https://esm.sh/heic2any@0.0.4",
-    "utif": "https://esm.sh/utif@3.1.0",
-    "ag-psd": "https://esm.sh/ag-psd@15.0.0",
-    "@jsquash/avif": "https://esm.sh/@jsquash/avif@1.3.0",
-    "gifenc": "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js",
-    "mammoth": "https://esm.sh/mammoth@1.6.0",
-    "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "marked": "https://esm.sh/marked@12.0.0",
-    "turndown": "https://esm.sh/turndown@7.1.3",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
-    "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
-    "pdfjs-dist/": "https://esm.sh/pdfjs-dist@3.11.174/",
-    "js-yaml": "https://esm.sh/js-yaml@4.1.0",
-    "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
-    "opentype.js": "https://esm.sh/opentype.js@1.3.4",
-    "lamejs": "https://esm.sh/lamejs@1.2.1",
-    "xlsx": "https://esm.sh/xlsx@0.18.5",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3"
-  }
-}
-</script>
-
+    <!-- Critical CSS: Prevent Layout Shift (CLS) and speed up FCP -->
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -97,13 +46,77 @@
             min-height: 100vh;
         }
         
-        .neubrutal-shadow {
-            box-shadow: 8px 8px 0px 0px var(--brutal-shadow);
-        }
-        .neubrutal-shadow-sm {
-            box-shadow: 4px 4px 0px 0px var(--brutal-shadow);
-        }
+        #root { min-height: 100vh; display: flex; flex-direction: column; }
+        .neubrutal-shadow { box-shadow: 8px 8px 0px 0px var(--brutal-shadow); }
+        .neubrutal-shadow-sm { box-shadow: 4px 4px 0px 0px var(--brutal-shadow); }
+        .neubrutal-border { border: 3px solid var(--brutal-border); }
         
+        /* Hide content until Tailwind has processed to prevent FOUC on mobile */
+        html:not(.tw-ready) body { opacity: 0; visibility: hidden; }
+        html.tw-ready body { opacity: 1; visibility: visible; transition: opacity 0.2s ease-in; }
+    </style>
+
+    <!-- Theme initialization -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('core-dark-mode');
+            const isDark = saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) document.documentElement.classList.add('dark');
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brutalYellow: '#FAFF00',
+                    }
+                }
+            }
+        };
+        // Signal that tailwind is ready
+        window.addEventListener('load', () => document.documentElement.classList.add('tw-ready'));
+        // Fallback if load is too slow
+        setTimeout(() => document.documentElement.classList.add('tw-ready'), 1500);
+    </script>
+    
+    <script type="importmap">
+{
+  "imports": {
+    "jszip": "https://esm.sh/jszip@^3.10.1",
+    "three": "https://esm.sh/three@0.160.0",
+    "three/": "https://esm.sh/three@0.160.0/",
+    "heic2any": "https://esm.sh/heic2any@0.0.4",
+    "utif": "https://esm.sh/utif@3.1.0",
+    "ag-psd": "https://esm.sh/ag-psd@15.0.0",
+    "@jsquash/avif": "https://esm.sh/@jsquash/avif@1.3.0",
+    "gifenc": "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js",
+    "mammoth": "https://esm.sh/mammoth@1.6.0",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "marked": "https://esm.sh/marked@12.0.0",
+    "turndown": "https://esm.sh/turndown@7.1.3",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@3.11.174",
+    "pdfjs-dist/": "https://esm.sh/pdfjs-dist@3.11.174/",
+    "js-yaml": "https://esm.sh/js-yaml@4.1.0",
+    "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
+    "opentype.js": "https://esm.sh/opentype.js@1.3.4",
+    "lamejs": "https://esm.sh/lamejs@1.2.1",
+    "xlsx": "https://esm.sh/xlsx@0.18.5",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+  }
+}
+</script>
+
+    <style>
         .neubrutal-button-active:active {
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(4px, 4px) !important;
@@ -118,57 +131,25 @@
             box-shadow: 0px 0px 0px 0px var(--brutal-shadow) !important;
             transform: translate(4px, 4px) !important;
         }
-
-        .neubrutal-border {
-            border: 3px solid var(--brutal-border);
-        }
         
-        .brutal-text-stroke {
-            -webkit-text-stroke: 1.5px black;
-        }
+        .brutal-text-stroke { -webkit-text-stroke: 1.5px black; }
 
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-          border-left: 2px solid var(--brutal-border);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: var(--brutal-border);
-          border: 1px solid var(--bg-color);
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-left: 2px solid var(--brutal-border); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--brutal-border); border: 1px solid var(--bg-color); }
 
-        .no-transition *:not(.animate-snappy) {
-            transition: none !important;
-        }
-        
-        .animate-snappy {
-            transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
-        }
+        .animate-snappy { transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1); }
 
         *:focus-visible {
             outline: 4px solid var(--brutal-border) !important;
             outline-offset: 2px !important;
             z-index: 50;
         }
-
-        /* Prevent Layout Shift by giving the root a minimum height */
-        #root {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
     </style>
 </head>
 <body class="min-h-screen">
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-    <script>
-        // Remove the no-transition class after the page has had a chance to render
-        window.addEventListener('load', () => {
-            document.documentElement.classList.remove('no-transition');
-        });
-    </script>
+    <!-- Main script with high priority to improve LCP -->
+    <script type="module" src="./index.tsx" fetchpriority="high"></script>
 </body>
 </html>
