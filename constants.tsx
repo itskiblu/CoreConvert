@@ -1,107 +1,134 @@
 
+
 import React from 'react';
 import { ConversionOption } from './types';
 
-// Exported checks to be used in App.tsx
-export const isImage = (f: File) => f.type.startsWith('image/') && !f.type.includes('svg') && !f.type.includes('tiff') && !f.name.toLowerCase().endsWith('.heic');
-export const isHeic = (f: File) => f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif');
-export const isTiff = (f: File) => f.type === 'image/tiff' || f.name.toLowerCase().endsWith('.tiff') || f.name.toLowerCase().endsWith('.tif');
-export const isAvif = (f: File) => f.type === 'image/avif' || f.name.toLowerCase().endsWith('.avif');
-export const isSvg = (f: File) => f.type.includes('svg') || f.name.toLowerCase().endsWith('.svg');
-export const isJson = (f: File) => f.type === 'application/json' || f.name.toLowerCase().endsWith('.json');
-export const isCsv = (f: File) => f.type === 'text/csv' || f.name.toLowerCase().endsWith('.csv');
-export const isTsv = (f: File) => f.type === 'text/tab-separated-values' || f.name.toLowerCase().endsWith('.tsv');
-export const isYaml = (f: File) => f.name.toLowerCase().endsWith('.yaml') || f.name.toLowerCase().endsWith('.yml');
-export const isXml = (f: File) => f.type.includes('xml') || f.name.toLowerCase().endsWith('.xml');
-export const isXlsx = (f: File) => f.name.toLowerCase().endsWith('.xlsx') || f.name.toLowerCase().endsWith('.xls');
-export const isMd = (f: File) => f.name.toLowerCase().endsWith('.md') || f.name.toLowerCase().endsWith('.markdown');
+// --- File Type Detectors ---
+
+// Images: Standard + HEIC + PSD + RAW + TIFF + SVG + ICO + BMP
+export const isImage = (f: File) => {
+  const name = f.name.toLowerCase();
+  const type = f.type.toLowerCase();
+  
+  // Standard
+  if (type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|avif|bmp|ico|cur|tiff?|heic|heif|svg)$/i.test(name)) return true;
+  // Adobe & Raw
+  if (/\.(psd|ai|eps|dng|cr2|nef|arw)$/i.test(name)) return true;
+  
+  return false;
+};
+
+// Data: JSON + CSV + XML + YAML + TSV + Excel + SQL
+export const isData = (f: File) => {
+  const name = f.name.toLowerCase();
+  const type = f.type.toLowerCase();
+  return (
+    type === 'application/json' ||
+    type === 'text/csv' ||
+    type.includes('xml') ||
+    type === 'text/tab-separated-values' ||
+    type === 'application/sql' ||
+    type.includes('sql') || 
+    /\.(json|csv|tsv|xml|yaml|yml|xlsx|xls|sql)$/i.test(name)
+  );
+};
+
+// Markup/Text: MD + HTML + TXT + CSS + JS (SQL moved to Data)
+export const isTextAndMarkup = (f: File) => {
+  const name = f.name.toLowerCase();
+  return (
+    f.type.startsWith('text/') || 
+    /\.(txt|md|markdown|html|htm|css|js|jsx|ts|tsx|log|ini|conf|sh|bat)$/i.test(name)
+  ) && !isData(f); // Exclude Data files to avoid clutter
+};
+
+// Specific checks for specialized tools
 export const isDocx = (f: File) => f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || f.name.toLowerCase().endsWith('.docx');
+
+// Updated Presentation check to include all requested extensions
+export const isPresentation = (f: File) => {
+  const name = f.name.toLowerCase();
+  return (
+    f.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || 
+    f.type === 'application/vnd.ms-powerpoint' ||
+    /\.(pptx|ppt|pptm|ppsx|ppsm|potx|potm|thmx|sldx|sldm|ppam)$/i.test(name)
+  );
+};
+
 export const isHtml = (f: File) => f.type.includes('html') || f.name.toLowerCase().endsWith('.html');
 export const isCss = (f: File) => f.type.includes('css') || f.name.toLowerCase().endsWith('.css');
-export const isText = (f: File) => f.type.startsWith('text/') || f.name.toLowerCase().endsWith('.txt') || isJson(f) || isCsv(f) || isTsv(f) || isMd(f) || isHtml(f) || isCss(f) || isXml(f);
+export const isPdf = (f: File) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+
+// Media
 export const isAudio = (f: File) => f.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac|m4r|opus)$/i.test(f.name);
 export const isVideo = (f: File) => f.type.startsWith('video/') || /\.(mp4|webm|mov|avi|mkv)$/i.test(f.name);
-export const isPdf = (f: File) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+
+// 3D & Fonts
 export const is3d = (f: File) => /\.(obj|stl|glb|gltf|ply)$/i.test(f.name);
 export const isFont = (f: File) => /\.(ttf|otf|woff|woff2)$/i.test(f.name);
 
+
+// --- Conversion Options Configuration ---
+
 export const CONVERSION_OPTIONS: ConversionOption[] = [
-  // Images
+  // --- IMAGES (Input: Any Image) ---
   { value: 'IMAGE_TO_PNG', label: 'Convert to PNG', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_JPG', label: 'Convert to JPG', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_WEBP', label: 'Convert to WebP', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_AVIF', label: 'Convert to AVIF', category: 'Image', isSupported: isImage },
-  { value: 'IMAGE_TO_SVG', label: 'Convert to SVG', category: 'Image', isSupported: isImage },
-  { value: 'IMAGE_TO_ICO', label: 'Convert to ICO (Favicon)', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_BMP', label: 'Convert to BMP', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_TO_ICO', label: 'Convert to ICO', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_TO_CUR', label: 'Convert to CUR', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_TO_GIF', label: 'Convert to GIF', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_TO_TIFF', label: 'Convert to TIFF', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_TO_SVG', label: 'Convert to SVG', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_PDF', label: 'Convert to PDF', category: 'Document', isSupported: isImage },
   { value: 'IMAGE_GRAYSCALE', label: 'Grayscale Filter', category: 'Image', isSupported: isImage },
-  
-  { value: 'HEIC_TO_PNG', label: 'HEIC to PNG', category: 'Image', isSupported: isHeic },
-  { value: 'HEIC_TO_JPG', label: 'HEIC to JPG', category: 'Image', isSupported: isHeic },
 
-  { value: 'TIFF_TO_PNG', label: 'TIFF to PNG', category: 'Image', isSupported: isTiff },
-  { value: 'TIFF_TO_JPG', label: 'TIFF to JPG', category: 'Image', isSupported: isTiff },
-  { value: 'TIFF_TO_PDF', label: 'TIFF to PDF', category: 'Document', isSupported: isTiff },
+  // --- DATA (Input: JSON, CSV, XML, YAML, TSV, XLSX, SQL) ---
+  { value: 'DATA_TO_JSON', label: 'Convert to JSON', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_CSV', label: 'Convert to CSV', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_TSV', label: 'Convert to TSV', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_YAML', label: 'Convert to YAML', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_XML', label: 'Convert to XML', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_SQL', label: 'Convert to SQL', category: 'Data', isSupported: isData },
+  { value: 'DATA_TO_XLSX', label: 'Convert to Excel (XLSX)', category: 'Data', isSupported: isData },
+  { value: 'DATA_PRETTIFY', label: 'Prettify Data', category: 'Data', isSupported: isData },
+  { value: 'DATA_MINIFY', label: 'Minify Data', category: 'Data', isSupported: isData },
 
-  { value: 'SVG_TO_PNG', label: 'SVG to PNG', category: 'Image', isSupported: isSvg },
-  { value: 'SVG_TO_JPG', label: 'SVG to JPG', category: 'Image', isSupported: isSvg },
-  { value: 'SVG_TO_WEBP', label: 'SVG to WebP', category: 'Image', isSupported: isSvg },
+  // --- TEXT & MARKUP (Input: MD, HTML, TXT) ---
+  { value: 'TEXT_TO_HTML', label: 'Convert to HTML', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_MARKDOWN', label: 'Convert to Markdown', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_PLAIN', label: 'Convert to Plain Text', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_PDF', label: 'Convert to PDF', category: 'Document', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_PPTX', label: 'Convert to Slides (PPTX)', category: 'Presentation', isSupported: isTextAndMarkup },
+  { value: 'MARKDOWN_TO_PPTX', label: 'Markdown to Slides (PPTX)', category: 'Presentation', isSupported: isTextAndMarkup },
   
-  // Data Matrix
-  { value: 'JSON_TO_CSV', label: 'JSON to CSV', category: 'Data', isSupported: isJson },
-  { value: 'JSON_TO_TSV', label: 'JSON to TSV', category: 'Data', isSupported: isJson },
-  { value: 'JSON_TO_YAML', label: 'JSON to YAML', category: 'Data', isSupported: isJson },
-  { value: 'JSON_TO_XML', label: 'JSON to XML', category: 'Data', isSupported: isJson },
-  { value: 'JSON_TO_SQL', label: 'JSON to SQL', category: 'Data', isSupported: isJson },
-  
-  { value: 'CSV_TO_JSON', label: 'CSV to JSON', category: 'Data', isSupported: isCsv },
-  { value: 'CSV_TO_TSV', label: 'CSV to TSV', category: 'Data', isSupported: isCsv },
-  { value: 'CSV_TO_YAML', label: 'CSV to YAML', category: 'Data', isSupported: isCsv },
-  { value: 'CSV_TO_XML', label: 'CSV to XML', category: 'Data', isSupported: isCsv },
-  { value: 'CSV_TO_SQL', label: 'CSV to SQL', category: 'Data', isSupported: isCsv },
-  
-  { value: 'TSV_TO_JSON', label: 'TSV to JSON', category: 'Data', isSupported: isTsv },
-  { value: 'TSV_TO_CSV', label: 'TSV to CSV', category: 'Data', isSupported: isTsv },
+  // Text Utilities
+  { value: 'TEXT_UPPERCASE', label: 'ALL UPPERCASE', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_LOWERCASE', label: 'all lowercase', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_SNAKE_CASE', label: 'snake_case', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'TEXT_TO_CAMEL_CASE', label: 'camelCase', category: 'Text', isSupported: isTextAndMarkup },
+  { value: 'URL_ENCODE', label: 'URL Encode', category: 'Utility', isSupported: isTextAndMarkup },
+  { value: 'URL_DECODE', label: 'URL Decode', category: 'Utility', isSupported: isTextAndMarkup },
 
-  { value: 'YAML_TO_JSON', label: 'YAML to JSON', category: 'Data', isSupported: isYaml },
-  { value: 'YAML_TO_CSV', label: 'YAML to CSV', category: 'Data', isSupported: isYaml },
-  { value: 'YAML_TO_XML', label: 'YAML to XML', category: 'Data', isSupported: isYaml },
-  
-  { value: 'XML_TO_JSON', label: 'XML to JSON', category: 'Data', isSupported: isXml },
-  { value: 'XML_TO_CSV', label: 'XML to CSV', category: 'Data', isSupported: isXml },
-  { value: 'XML_TO_YAML', label: 'XML to YAML', category: 'Data', isSupported: isXml },
-  { value: 'XML_PRETTIFY', label: 'Prettify XML', category: 'Data', isSupported: isXml },
-  { value: 'XML_MINIFY', label: 'Minify XML', category: 'Data', isSupported: isXml },
+  // Specific Code Tools
+  { value: 'HTML_MINIFY', label: 'Minify HTML', category: 'Text', isSupported: isHtml },
+  { value: 'CSS_MINIFY', label: 'Minify CSS', category: 'Text', isSupported: isCss },
 
-  { value: 'XLSX_TO_JSON', label: 'Excel to JSON', category: 'Data', isSupported: isXlsx },
-  { value: 'XLSX_TO_CSV', label: 'Excel to CSV', category: 'Data', isSupported: isXlsx },
-  
-  { value: 'JSON_PRETTIFY', label: 'Prettify JSON', category: 'Data', isSupported: isJson },
-  { value: 'JSON_MINIFY', label: 'Minify JSON', category: 'Data', isSupported: isJson },
-  
-  // Text & Code
-  { value: 'MARKDOWN_TO_HTML', label: 'Markdown to HTML', category: 'Text', isSupported: isMd },
-  { value: 'MARKDOWN_TO_PDF', label: 'Markdown to PDF', category: 'Document', isSupported: isMd },
-  
-  { value: 'HTML_TO_MARKDOWN', label: 'HTML to Markdown', category: 'Text', isSupported: isHtml },
-  { value: 'HTML_TO_TEXT', label: 'HTML to Plain Text', category: 'Text', isSupported: isHtml },
-
+  // --- SPECIFIC DOCUMENTS ---
   { value: 'DOCX_TO_HTML', label: 'Word to HTML', category: 'Document', isSupported: isDocx },
   { value: 'DOCX_TO_TEXT', label: 'Word to Text', category: 'Document', isSupported: isDocx },
   { value: 'DOCX_TO_MARKDOWN', label: 'Word to Markdown', category: 'Document', isSupported: isDocx },
 
-  { value: 'TEXT_TO_PDF', label: 'Text to PDF', category: 'Document', isSupported: isText },
-  { value: 'TEXT_UPPERCASE', label: 'ALL UPPERCASE', category: 'Text', isSupported: isText },
-  { value: 'TEXT_LOWERCASE', label: 'all lowercase', category: 'Text', isSupported: isText },
-  { value: 'TEXT_TO_SNAKE_CASE', label: 'snake_case', category: 'Text', isSupported: isText },
-  { value: 'TEXT_TO_CAMEL_CASE', label: 'camelCase', category: 'Text', isSupported: isText },
-  { value: 'URL_ENCODE', label: 'URL Encode', category: 'Utility', isSupported: isText },
-  { value: 'URL_DECODE', label: 'URL Decode', category: 'Utility', isSupported: isText },
-  { value: 'HTML_MINIFY', label: 'Minify HTML', category: 'Text', isSupported: isHtml },
-  { value: 'CSS_MINIFY', label: 'Minify CSS', category: 'Text', isSupported: isCss },
-  
-  // Audio & Video
+  // --- PRESENTATION (PPTX, PPTM, PPSX, POTX, etc) ---
+  { value: 'PRESENTATION_TO_PDF', label: 'Slides to PDF', category: 'Presentation', isSupported: isPresentation },
+  { value: 'PRESENTATION_TO_HTML', label: 'Slides to HTML', category: 'Presentation', isSupported: isPresentation },
+  { value: 'PRESENTATION_TO_TEXT', label: 'Extract Text', category: 'Presentation', isSupported: isPresentation },
+  { value: 'PRESENTATION_TO_JSON', label: 'Extract Data (JSON)', category: 'Presentation', isSupported: isPresentation },
+  { value: 'PRESENTATION_TO_PPTX', label: 'Convert to Editable PPTX', category: 'Presentation', isSupported: isPresentation },
+
+  // --- AUDIO (Input: Any Audio) ---
   { value: 'AUDIO_TO_MP3', label: 'Convert to MP3', category: 'Audio', isSupported: isAudio },
   { value: 'AUDIO_TO_WAV', label: 'Convert to WAV', category: 'Audio', isSupported: isAudio },
   { value: 'AUDIO_TO_M4A', label: 'Convert to M4A (AAC)', category: 'Audio', isSupported: isAudio },
@@ -110,7 +137,9 @@ export const CONVERSION_OPTIONS: ConversionOption[] = [
   { value: 'AUDIO_TO_FLAC', label: 'Convert to FLAC', category: 'Audio', isSupported: isAudio },
   { value: 'AUDIO_TO_WEBM', label: 'Convert to WebM', category: 'Audio', isSupported: isAudio },
   { value: 'AUDIO_TO_OPUS', label: 'Convert to OPUS', category: 'Audio', isSupported: isAudio },
-  { value: 'AUDIO_TO_M4R', label: 'Convert to M4R (Ringtone)', category: 'Audio', isSupported: isAudio },
+  { value: 'AUDIO_TO_M4R', label: 'Convert to M4R', category: 'Audio', isSupported: isAudio },
+
+  // --- VIDEO (Input: Any Video) ---
   { value: 'VIDEO_TO_MP4', label: 'Convert to MP4', category: 'Video', isSupported: isVideo },
   { value: 'VIDEO_TO_WEBM', label: 'Convert to WebM', category: 'Video', isSupported: isVideo },
   { value: 'VIDEO_TO_MOV', label: 'Convert to MOV', category: 'Video', isSupported: isVideo },
@@ -119,32 +148,22 @@ export const CONVERSION_OPTIONS: ConversionOption[] = [
   { value: 'VIDEO_TO_MP3', label: 'Extract Audio (MP3)', category: 'Video', isSupported: isVideo },
   { value: 'VIDEO_SNAPSHOT', label: 'Take Snapshot', category: 'Video', isSupported: isVideo },
 
-  // 3D & CAD
-  { value: 'OBJ_TO_STL', label: 'OBJ to STL', category: '3D', isSupported: is3d },
-  { value: 'OBJ_TO_GLB', label: 'OBJ to GLB', category: '3D', isSupported: is3d },
-  { value: 'OBJ_TO_USDZ', label: 'OBJ to USDZ (AR)', category: '3D', isSupported: is3d },
-  { value: 'STL_TO_OBJ', label: 'STL to OBJ', category: '3D', isSupported: is3d },
-  { value: 'STL_TO_GLB', label: 'STL to GLB', category: '3D', isSupported: is3d },
-  { value: 'STL_TO_USDZ', label: 'STL to USDZ (AR)', category: '3D', isSupported: is3d },
-  { value: 'GLB_TO_OBJ', label: 'GLB to OBJ', category: '3D', isSupported: is3d },
-  { value: 'GLB_TO_STL', label: 'GLB to STL', category: '3D', isSupported: is3d },
-  { value: 'GLB_TO_USDZ', label: 'GLB to USDZ (AR)', category: '3D', isSupported: is3d },
-  { value: 'PLY_TO_OBJ', label: 'PLY to OBJ', category: '3D', isSupported: is3d },
-  { value: 'PLY_TO_STL', label: 'PLY to STL', category: '3D', isSupported: is3d },
-  { value: 'PLY_TO_GLB', label: 'PLY to GLB', category: '3D', isSupported: is3d },
-  { value: 'MODEL_TO_IMAGE', label: '3D to PNG (Snapshot)', category: '3D', isSupported: is3d },
+  // --- 3D (Input: Any 3D) ---
+  { value: 'MODEL_TO_STL', label: 'Convert to STL', category: '3D', isSupported: is3d },
+  { value: 'MODEL_TO_OBJ', label: 'Convert to OBJ', category: '3D', isSupported: is3d },
+  { value: 'MODEL_TO_GLB', label: 'Convert to GLB', category: '3D', isSupported: is3d },
+  { value: 'MODEL_TO_USDZ', label: 'Convert to USDZ', category: '3D', isSupported: is3d },
+  { value: 'MODEL_TO_IMAGE', label: 'Render to Image', category: '3D', isSupported: is3d },
 
-  // Fonts
+  // --- FONTS (Input: Any Font) ---
   { value: 'FONT_TO_TTF', label: 'Convert to TTF', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_OTF', label: 'Convert to OTF', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_WOFF', label: 'Convert to WOFF', category: 'Font', isSupported: isFont },
-  { value: 'FONT_TO_JSON', label: 'Extract Glyphs (JSON)', category: 'Font', isSupported: isFont },
-  { value: 'FONT_TO_CSS', label: 'Generate CSS (@font-face)', category: 'Font', isSupported: isFont },
+  { value: 'FONT_TO_JSON', label: 'Extract Glyphs', category: 'Font', isSupported: isFont },
+  { value: 'FONT_TO_CSS', label: 'Generate CSS', category: 'Font', isSupported: isFont },
 
-  // Document Utilities
+  // --- UTILITIES ---
   { value: 'PDF_TO_PNG', label: 'PDF to Image (PNG)', category: 'Document', isSupported: isPdf },
-
-  // Utility
   { value: 'BASE64_ENCODE', label: 'Base64 Encode', category: 'Utility', isSupported: () => true },
   { value: 'BASE64_DECODE', label: 'Base64 Decode', category: 'Utility', isSupported: () => true },
   { value: 'FILE_TO_ZIP', label: 'Compress to ZIP', category: 'Utility', isSupported: () => true },
@@ -195,6 +214,12 @@ export const ICONS = {
   Document: () => (
     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
       <path d="M14 2H4v20h16V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+    </svg>
+  ),
+
+  Presentation: () => (
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+      <path d="M2 3h20v2H2V3zm1 4h18v12H3V7zm2 2v8h14V9H5zm4 1h6v4H9v-4z" />
     </svg>
   ),
   

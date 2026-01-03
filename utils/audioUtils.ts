@@ -1,244 +1,220 @@
+import { ConversionType } from '../types';
 
-import { loadScript } from './scriptLoader';
-
-/**
- * lamejs is a port of the LAME MP3 encoder. 
- * Because it's an older codebase, it relies on its internal classes/constants 
- * being available in the global scope. We load it via a script tag in index.html
- * to ensure it works correctly in its own non-strict global context.
- */
-async function getLameJS() {
-  await loadScript('lamejs');
-  const lj = (window as any).lamejs;
-  if (!lj) {
-    throw new Error("lamejs library not loaded. Please check your internet connection.");
-  }
-  return lj;
+interface ConversionResult {
+  url: string;
+  name: string;
+  blob: Blob;
 }
 
-/**
- * Utility to convert AudioBuffer to a WAV blob.
- * This manually writes the RIFF WAVE header bytes and PCM audio data
- * to an ArrayBuffer.
- */
-export async function audioBufferToWav(buffer: AudioBuffer, mono: boolean = false): Promise<Blob> {
-  const numChannels = mono ? 1 : buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM (Uncompressed)
-  const bitDepth = 16; // Standard CD quality bit depth
-  
-  let result: Float32Array;
-  
-  // Interleave channels or downmix to mono
-  if (mono && buffer.numberOfChannels > 1) {
-    const left = buffer.getChannelData(0);
-    const right = buffer.getChannelData(1);
-    result = new Float32Array(left.length);
-    for (let i = 0; i < left.length; i++) {
-      result[i] = (left[i] + right[i]) / 2; // Average the channels
-    }
-  } else {
-    if (numChannels === 2) {
-      const left = buffer.getChannelData(0);
-      const right = buffer.getChannelData(1);
-      result = new Float32Array(left.length * 2);
-      for (let i = 0; i < left.length; i++) {
-        result[i * 2] = left[i];
-        result[i * 2 + 1] = right[i];
-      }
-    } else {
-      result = buffer.getChannelData(0);
-    }
-  }
+export async function convertAudioFile(file: File, type: ConversionType): Promise<ConversionResult> {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const arrayBuffer = await file.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  const baseName = file.name.split('.').slice(0, -1).join('.');
 
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  
-  const bufferLength = result.length * bytesPerSample;
-  const headerSize = 44; // Standard WAV header size
-  const totalLength = headerSize + bufferLength;
-  const arrayBuffer = new ArrayBuffer(totalLength);
-  const view = new DataView(arrayBuffer);
+  let blob: Blob;
+  let ext: string;
+  let mime: string;
 
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-
-  // Write RIFF Header
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + bufferLength, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, bufferLength, true);
-
-  // Write PCM samples
-  let offset = 44;
-  for (let i = 0; i < result.length; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, result[i])); // Clamp to [-1, 1]
-    // Convert float range to 16-bit integer range
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-
-  return new Blob([arrayBuffer], { type: 'audio/wav' });
-}
-
-/**
- * Utility to convert AudioBuffer to an MP3 blob using lamejs.
- * Encodes raw PCM data into MP3 frames.
- */
-export async function audioBufferToMp3(buffer: AudioBuffer, kbps: number = 128): Promise<Blob> {
-  const lamejs = await getLameJS();
-  const channels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  
-  const Mp3Encoder = lamejs.Mp3Encoder;
-  if (!Mp3Encoder) {
-    throw new Error("Mp3Encoder not found in lamejs library.");
-  }
-
-  const mp3encoder = new Mp3Encoder(channels, sampleRate, kbps);
-  const mp3Data: any[] = [];
-
-  // LameJS requires samples as 16-bit integers
-  const sampleBlockSize = 1152; // Standard MP3 block size
-  
-  const left = buffer.getChannelData(0);
-  const right = channels > 1 ? buffer.getChannelData(1) : null;
-  
-  const leftInt16 = new Int16Array(left.length);
-  const rightInt16 = right ? new Int16Array(right.length) : null;
-  
-  // Convert float32 samples to Int16
-  for (let i = 0; i < left.length; i++) {
-    const l = Math.max(-1, Math.min(1, left[i]));
-    leftInt16[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+  switch (type) {
+    case 'AUDIO_TO_WAV':
+      blob = bufferToWav(audioBuffer);
+      ext = 'wav';
+      mime = 'audio/wav';
+      break;
     
-    if (right && rightInt16) {
-      const r = Math.max(-1, Math.min(1, right[i]));
-      rightInt16[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
-    }
+    case 'AUDIO_TO_MP3':
+      blob = await bufferToMp3(audioBuffer);
+      ext = 'mp3';
+      mime = 'audio/mpeg';
+      break;
+
+    case 'AUDIO_TO_WEBM':
+    case 'AUDIO_TO_OGG':
+      // Use MediaRecorder for WebM/Ogg if supported
+      blob = await bufferToStreamFormat(audioBuffer, 'audio/webm');
+      ext = type === 'AUDIO_TO_OGG' ? 'ogg' : 'webm';
+      mime = 'audio/webm';
+      break;
+
+    case 'AUDIO_TO_M4A':
+    case 'AUDIO_TO_AAC':
+    case 'AUDIO_TO_M4R':
+       // Try MP4 container
+       try {
+           blob = await bufferToStreamFormat(audioBuffer, 'audio/mp4');
+           ext = type === 'AUDIO_TO_M4R' ? 'm4r' : 'm4a';
+           mime = 'audio/mp4';
+       } catch (e) {
+           // Fallback to WAV if MP4 encoding not supported (e.g. Firefox)
+           console.warn("MP4 Audio encoding not supported, falling back to WAV");
+           blob = bufferToWav(audioBuffer);
+           ext = 'wav';
+           mime = 'audio/wav';
+       }
+       break;
+
+    default:
+      // Fallback to WAV
+      blob = bufferToWav(audioBuffer);
+      ext = 'wav';
+      mime = 'audio/wav';
   }
 
-  // Encode blocks
-  for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
-    const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
-    let mp3buf;
-    if (channels === 2 && rightInt16) {
-      const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
-      mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-    } else {
-      mp3buf = mp3encoder.encodeBuffer(leftChunk);
-    }
-    if (mp3buf.length > 0) {
-      mp3Data.push(mp3buf);
-    }
-  }
+  // Cleanup
+  audioContext.close();
 
-  // Finalize encoding
-  const flushBuf = mp3encoder.flush();
-  if (flushBuf.length > 0) {
-    mp3Data.push(flushBuf);
-  }
-
-  return new Blob(mp3Data, { type: 'audio/mp3' });
+  const url = URL.createObjectURL(blob);
+  return { url, name: `${baseName}.${ext}`, blob };
 }
 
-/**
- * Decodes a raw audio file (MP3, WAV, etc.) into a raw AudioBuffer.
- * Uses the Browser's native AudioContext.
- */
-export async function decodeAudio(file: File): Promise<AudioBuffer> {
-  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const arrayBuffer = await file.arrayBuffer();
-  return await audioCtx.decodeAudioData(arrayBuffer);
-}
+// --- WAV Encoder ---
 
-/**
- * Converts audio to OGG, M4A, WEBM, FLAC, AAC, OPUS, or M4R using the MediaRecorder API.
- * This is a real-time (or quasi-real-time) conversion process.
- */
-export async function convertAudioViaRecorder(
-  file: File,
-  targetFormat: 'ogg' | 'm4a' | 'webm' | 'flac' | 'aac' | 'opus' | 'm4r',
-  onProgress?: (progress: number) => void
-): Promise<Blob> {
-  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const arrayBuffer = await file.arrayBuffer();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  
-  // Determine supported MIME type for the requested format
-  const mimeTypes: Record<string, string[]> = {
-    'ogg': ['audio/ogg; codecs=opus', 'audio/ogg', 'application/ogg'],
-    'opus': ['audio/ogg; codecs=opus', 'audio/opus'],
-    'm4a': ['audio/mp4', 'audio/aac', 'audio/mp4; codecs=mp4a.40.2'],
-    'm4r': ['audio/mp4', 'audio/aac', 'audio/mp4; codecs=mp4a.40.2'], // M4R is just AAC in mp4 container
-    'webm': ['audio/webm; codecs=opus', 'audio/webm'],
-    'flac': ['audio/flac', 'audio/x-flac'],
-    'aac': ['audio/aac', 'audio/aacp', 'audio/mp4; codecs=mp4a.40.2']
-  };
-  
-  const supportedMime = mimeTypes[targetFormat].find(m => MediaRecorder.isTypeSupported(m));
-  
-  if (!supportedMime) {
-     throw new Error(`Your browser does not support encoding to ${targetFormat.toUpperCase()}`);
+function bufferToWav(abuffer: AudioBuffer) {
+  const numOfChan = abuffer.numberOfChannels;
+  const length = abuffer.length * numOfChan * 2 + 44;
+  const buffer = new ArrayBuffer(length);
+  const view = new DataView(buffer);
+  const channels = [];
+  let i;
+  let sample;
+  let offset = 0;
+  let pos = 0;
+
+  // write WAVE header
+  setUint32(0x46464952); // "RIFF"
+  setUint32(length - 8); // file length - 8
+  setUint32(0x45564157); // "WAVE"
+
+  setUint32(0x20746d66); // "fmt " chunk
+  setUint32(16); // length = 16
+  setUint16(1); // PCM (uncompressed)
+  setUint16(numOfChan);
+  setUint32(abuffer.sampleRate);
+  setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+  setUint16(numOfChan * 2); // block-align
+  setUint16(16); // 16-bit (hardcoded in this loop)
+
+  setUint32(0x61746164); // "data" - chunk
+  setUint32(length - pos - 4); // chunk length
+
+  // write interleaved data
+  for (i = 0; i < abuffer.numberOfChannels; i++) {
+    channels.push(abuffer.getChannelData(i));
   }
 
-  const dest = audioCtx.createMediaStreamDestination();
-  const source = audioCtx.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(dest);
-  
-  const recorder = new MediaRecorder(dest.stream, { mimeType: supportedMime });
-  const chunks: Blob[] = [];
-  
-  return new Promise((resolve, reject) => {
-      recorder.ondataavailable = (e) => {
-          if(e.data.size > 0) chunks.push(e.data);
-      };
-      
-      recorder.onstop = () => {
-         const blob = new Blob(chunks, { type: supportedMime });
-         source.disconnect();
-         audioCtx.close();
-         resolve(blob);
-      };
-      
-      recorder.onerror = (e) => {
-          reject(e);
-          audioCtx.close();
-      };
+  while (pos < abuffer.length) {
+    for (i = 0; i < numOfChan; i++) {
+      // interleave channels
+      sample = Math.max(-1, Math.min(1, channels[i][pos])); // clamp
+      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
+      view.setInt16(44 + offset, sample, true);
+      offset += 2;
+    }
+    pos++;
+  }
 
-      // Progress tracker based on playback time
-      const duration = audioBuffer.duration;
-      const interval = setInterval(() => {
-          if (audioCtx.state === 'running') {
-               const p = (audioCtx.currentTime / duration) * 100;
-               if(onProgress) onProgress(Math.min(p, 99));
-          }
-      }, 100);
+  return new Blob([buffer], { type: 'audio/wav' });
 
-      source.onended = () => {
-          clearInterval(interval);
-          // Wait a tiny bit to ensure recorder captures the end
-          setTimeout(() => {
-            if (recorder.state !== 'inactive') recorder.stop();
-            if(onProgress) onProgress(100);
-          }, 100);
-      };
+  function setUint16(data: number) {
+    view.setUint16(pos, data, true);
+    pos += 2;
+  }
 
-      recorder.start();
-      source.start();
-      // Resume context if suspended (common in browsers requiring user gesture)
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-  });
+  function setUint32(data: number) {
+    view.setUint32(pos, data, true);
+    pos += 4;
+  }
+}
+
+// --- MP3 Encoder (Lamejs) ---
+
+async function bufferToMp3(audioBuffer: AudioBuffer): Promise<Blob> {
+    // Dynamic import
+    // @ts-ignore
+    const lamejs = await import('lamejs');
+    
+    const channels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128); // 128kbps
+
+    // Get Data
+    const samples = [];
+    const left = audioBuffer.getChannelData(0);
+    const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
+
+    // Convert float to int16
+    const sampleBlockSize = 1152; // multiple of 576
+    const mp3Data = [];
+
+    // LameJS expects Int16
+    const l = new Int16Array(left.length);
+    const r = new Int16Array(right.length);
+    
+    for(let i=0; i<left.length; i++) {
+        l[i] = left[i] < 0 ? left[i] * 32768 : left[i] * 32767;
+        r[i] = right[i] < 0 ? right[i] * 32768 : right[i] * 32767;
+    }
+
+    // Encode
+    let remaining = l.length;
+    let i = 0;
+    while (remaining >= sampleBlockSize) {
+        const leftChunk = l.subarray(i, i + sampleBlockSize);
+        const rightChunk = r.subarray(i, i + sampleBlockSize);
+        const mp3buf = channels === 1 
+            ? mp3encoder.encodeBuffer(leftChunk)
+            : mp3encoder.encodeBuffer(leftChunk, rightChunk);
+        
+        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+        remaining -= sampleBlockSize;
+        i += sampleBlockSize;
+    }
+    
+    const mp3buf = mp3encoder.flush();
+    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+
+    return new Blob(mp3Data, { type: 'audio/mpeg' });
+}
+
+// --- Realtime / Stream Encoder (WebM/MP4) ---
+
+async function bufferToStreamFormat(audioBuffer: AudioBuffer, mimeType: string): Promise<Blob> {
+    const offlineCtx = new OfflineAudioContext(audioBuffer.numberOfChannels, audioBuffer.length, audioBuffer.sampleRate);
+    const source = offlineCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineCtx.destination);
+    
+    // We need to render it to get a Stream... 
+    // Actually, MediaRecorder needs a MediaStreamDestination. OfflineContext doesn't support that directly.
+    // We must use a real AudioContext or perform a fast "playback" into a stream.
+    // To avoid hearing it, we use a GainNode set to 0 connected to destination, 
+    // AND a StreamDestination for recording.
+    
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const streamDest = ctx.createMediaStreamDestination();
+    const sourceNode = ctx.createBufferSource();
+    sourceNode.buffer = audioBuffer;
+    sourceNode.connect(streamDest);
+    
+    const recorder = new MediaRecorder(streamDest.stream, { mimeType });
+    const chunks: Blob[] = [];
+    
+    return new Promise((resolve, reject) => {
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = () => {
+             const blob = new Blob(chunks, { type: mimeType });
+             ctx.close();
+             resolve(blob);
+        };
+        recorder.onerror = reject;
+        
+        recorder.start();
+        sourceNode.start();
+        // Stop recording when buffer duration ends (+ padding)
+        sourceNode.onended = () => {
+             // Small delay to ensure flush
+             setTimeout(() => recorder.stop(), 100);
+        };
+    });
 }

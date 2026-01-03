@@ -8,8 +8,9 @@ interface AboutContentProps {
 
 export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
   // Group options by category for the list
-  const categories = ['Image', 'Data', 'Document', 'Audio', 'Video', '3D', 'Font', 'Utility'];
+  const categories = ['Image', 'Data', 'Document', 'Presentation', 'Audio', 'Video', '3D', 'Font', 'Utility'];
   const Icon3D = ICONS['3D'];
+  const IconPresentation = ICONS['Presentation'];
   
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
@@ -18,7 +19,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
         className="mb-8 bg-black dark:bg-white text-brutalYellow dark:text-black px-6 py-2 font-black uppercase text-xs neubrutal-shadow-sm flex items-center gap-2 transition-all duration-100 neubrutal-button-active outline-none active:scale-95"
       >
         <div className="rotate-180 scale-75"><ICONS.Download /></div>
-        Back to Converter
+        Back to App
       </button>
 
       <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow p-8 md:p-12 space-y-10">
@@ -26,7 +27,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
           <h1 className="text-4xl md:text-6xl font-black text-black dark:text-white uppercase tracking-tighter leading-none mb-4">
             About <span className="text-brutalYellow brutal-text-stroke">CoreConvert</span>
           </h1>
-          <p className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+          <p className="text-sm font-black uppercase tracking-widest text-gray-700 dark:text-gray-300">
             RAW POWER • TOTAL CONTROL
           </p>
         </header>
@@ -38,7 +39,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
           <p className="text-lg font-bold text-black dark:text-white leading-relaxed">
             CoreConvert is the antithesis to the modern cloud-first web. We believe that your computer is a powerhouse, and your data shouldn't have to travel across the globe just to change format.
           </p>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
+          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
             By leveraging advanced browser technologies including WebAssembly, the Web Audio API, and the Canvas Engine we've ported professional-grade conversion logic directly into your local environment. This is utility without compromise.
           </p>
         </section>
@@ -46,28 +47,28 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="neubrutal-border p-6 space-y-3">
             <h3 className="font-black text-xl uppercase text-black dark:text-white">1. Zero Latency</h3>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
               There is no "Upload" or "Download" phase. Files are read from your disk and processed instantly in your machine's memory. Your bandwidth is no longer the bottleneck; your hardware is the engine.
             </p>
           </div>
 
           <div className="neubrutal-border p-6 space-y-3">
             <h3 className="font-black text-xl uppercase text-black dark:text-white">2. Privacy by Default</h3>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
               Security is not a feature; it's the architecture. By running the conversion engine client-side, we've removed the server-side liability entirely. Your files remain on your device, exactly where they belong.
             </p>
           </div>
 
           <div className="neubrutal-border p-6 space-y-3">
             <h3 className="font-black text-xl uppercase text-black dark:text-white">3. Open Standards</h3>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
               We rely on transparent web standards like CSV, JSON, and WebP. CoreConvert is designed to be a lightweight, permanent fixture in your toolkit that works offline and across all modern operating systems.
             </p>
           </div>
 
           <div className="neubrutal-border p-6 space-y-3">
             <h3 className="font-black text-xl uppercase text-black dark:text-white">4. No Friction</h3>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
               No accounts. No subscription models. No "pro" tiers. CoreConvert is a raw utility for developers, designers, and power users who need fast results without the corporate noise.
             </p>
           </div>
@@ -77,7 +78,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
           <div className="inline-block bg-black dark:bg-white text-brutalYellow dark:text-black px-4 py-1 font-black uppercase text-sm neubrutal-border mb-2">
             Utility Capabilities
           </div>
-          <p className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-tight">Supported File-types:</p>
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-tight">Supported File-types:</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map(cat => (
@@ -89,6 +90,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
                     {cat === 'Video' && <ICONS.Video />}
                     {cat === 'Data' && <ICONS.Data />}
                     {cat === 'Document' && <ICONS.Document />}
+                    {cat === 'Presentation' && <ICONS.Presentation />}
                     {cat === '3D' && <Icon3D />}
                     {cat === 'Font' && <ICONS.Font />}
                     {cat === 'Utility' && <ICONS.Utility />}
@@ -98,6 +100,30 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
                 <div className="flex flex-wrap gap-1.5">
                   {cat === 'Data' ? (
                     ['JSON', 'CSV', 'XML', 'YAML', 'TSV', 'SQL', 'EXCEL'].map(fmt => (
+                      <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {fmt}
+                      </span>
+                    ))
+                  ) : cat === 'Image' ? (
+                     ['PNG', 'JPG', 'WEBP', 'AVIF', 'HEIC', 'SVG', 'ICO', 'GIF', 'TIFF', 'PSD', 'RAW'].map(fmt => (
+                      <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {fmt}
+                      </span>
+                    ))
+                  ) : cat === '3D' ? (
+                     ['OBJ', 'STL', 'GLB', 'USDZ', 'PLY'].map(fmt => (
+                      <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {fmt}
+                      </span>
+                    ))
+                  ) : cat === 'Document' ? (
+                     ['PDF', 'DOCX', 'TXT', 'MD', 'HTML'].map(fmt => (
+                      <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
+                        {fmt}
+                      </span>
+                    ))
+                  ) : cat === 'Presentation' ? (
+                     ['PPTX', 'PPTM', 'POTX', 'PPSX', 'SLDX'].map(fmt => (
                       <span key={fmt} className="bg-white dark:bg-zinc-900 border border-black dark:border-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-black dark:text-white">
                         {fmt}
                       </span>
@@ -116,7 +142,7 @@ export const AboutContent: React.FC<AboutContentProps> = ({ onBack }) => {
         </section>
 
         <footer className="pt-8 border-t-2 border-dashed border-black dark:border-white/20 text-center">
-          <p className="text-xs font-black uppercase text-gray-500 tracking-[0.1em]">
+          <p className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-[0.1em]">
             Transparency is our default setting. For any further questions, view our <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="underline hover:text-black dark:hover:text-white">open-source repository</a>.
           </p>
         </footer>
