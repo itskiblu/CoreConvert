@@ -15,6 +15,14 @@ import {
   isDocx,
   isPresentation,
 } from './constants';
+import { convertImageFile } from './utils/imageUtils';
+import { convertDocumentFile } from './utils/pdfUtils';
+import { convertDataFile } from './utils/dataUtils';
+import { convertPresentationFile } from './utils/presentationUtils';
+import { convertAudioFile } from './utils/audioUtils';
+import { convertVideoFile } from './utils/videoUtils';
+import { convertModelFile } from './utils/modelUtils';
+import { convertFontFile } from './utils/fontUtils';
 
 import { ConversionCard } from './components/ConversionCard';
 import { PrivacyContent } from './components/PrivacyContent';
@@ -28,18 +36,25 @@ interface Notification {
   type?: 'success' | 'alert';
 }
 
+/**
+ * Main Application Component
+ * Handles global state, file management, and routing to utility functions.
+ */
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'privacy' | 'terms' | 'about' | 'diagnostics'>('home');
   const [files, setFiles] = useState<FileItem[]>([]);
+  // Ref to keep track of files without causing re-renders in useCallback dependencies
   const filesRef = useRef<FileItem[]>(files);
   const [isZipping, setIsZipping] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unsupportedFileName, setUnsupportedFileName] = useState<string | null>(null);
   
+  // Sync ref with state
   useEffect(() => {
     filesRef.current = files;
   }, [files]);
 
+  // Initialize dark mode from localStorage
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('core-dark-mode');
@@ -52,6 +67,7 @@ export default function App() {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
+  // Apply dark mode class to HTML root
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) {
@@ -62,9 +78,11 @@ export default function App() {
     localStorage.setItem('core-dark-mode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
+  // Focus management for modal
   useEffect(() => {
     if (unsupportedFileName) {
       previousActiveElement.current = document.activeElement as HTMLElement;
+      // Focus modal after render
       setTimeout(() => {
         const focusable = modalRef.current?.querySelector('button');
         if (focusable) (focusable as HTMLElement).focus();
@@ -89,6 +107,9 @@ export default function App() {
     }, 2000);
   }, [removeNotification]);
 
+  /**
+   * Handles incoming files from the file picker.
+   */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []) as File[];
     const validFiles: FileItem[] = [];
@@ -97,6 +118,7 @@ export default function App() {
       const name = file.name.toLowerCase();
       const mime = file.type.toLowerCase();
 
+      // Detection Logic
       const fileIsImage = isImage(file);
       const fileIsData = isData(file);
       const fileIsText = isTextAndMarkup(file);
@@ -118,17 +140,22 @@ export default function App() {
       let defaultType: ConversionType = 'PASSTHROUGH';
       let previewUrl: string | undefined = undefined;
 
+      // Determine default conversion suggestion based on category logic
       if (fileIsImage) {
+        // Default to PNG, unless input is PNG, then JPG
         if (mime === 'image/png' || name.endsWith('.png')) {
            defaultType = 'IMAGE_TO_JPG';
         } else {
            defaultType = 'IMAGE_TO_PNG';
         }
+        
+        // Show preview for browsers that support the format directly
         if (!name.endsWith('.heic') && !name.endsWith('.tiff') && !name.endsWith('.psd') && !name.endsWith('.raw')) {
            previewUrl = URL.createObjectURL(file);
         }
       }
       else if (fileIsData) {
+        // Data rotation: JSON -> CSV -> JSON
         if (name.endsWith('.csv') || mime === 'text/csv') defaultType = 'DATA_TO_JSON';
         else defaultType = 'DATA_TO_CSV';
       }
@@ -139,6 +166,7 @@ export default function App() {
         defaultType = 'PRESENTATION_TO_PDF';
       }
       else if (fileIsText) {
+        // Text rotation
         if (name.endsWith('.md')) defaultType = 'TEXT_TO_HTML';
         else if (name.endsWith('.html')) defaultType = 'TEXT_TO_MARKDOWN';
         else defaultType = 'TEXT_TO_PDF';
@@ -190,19 +218,31 @@ export default function App() {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, type } : f));
   }, []);
 
+  /**
+   * Core Logic Switch.
+   * Routes the conversion request to the appropriate utility function
+   * based on the selected ConversionType.
+   */
   const processConversion = useCallback(async (id: string) => {
     const item = filesRef.current.find(f => f.id === id);
     if (!item || item.status === ConversionStatus.PROCESSING) return;
 
+    // Reset progress and set status
     setFiles(prev => prev.map(f => f.id === id ? { ...f, status: ConversionStatus.PROCESSING, progress: 0 } : f));
 
+    // Simulate progress: Increment every 20ms (50fps) for very smooth feedback
     const intervalId = setInterval(() => {
       setFiles(prev => prev.map(f => {
         if (f.id === id && f.status === ConversionStatus.PROCESSING) {
+          // Cap at 95% so it never finishes before the actual process
           const target = 95;
           if (f.progress >= target) return f;
+
+          // Asymptotic approach to target
           const remaining = target - f.progress;
+          // Slow down as we get closer to 95%
           const increment = Math.max(0.1, remaining * 0.05);
+          
           return { ...f, progress: Math.min(target, f.progress + increment) };
         }
         return f;
@@ -213,39 +253,33 @@ export default function App() {
       let result = null;
       const type = item.type;
       
+      // Allow initial render cycle to update UI before heavy work
       await new Promise(r => setTimeout(r, 10));
       
-      // Dynamic imports of heavy utility modules to improve LCP
+      // Route based on category
       if (type.startsWith('IMAGE_')) {
-         const { convertImageFile } = await import('./utils/imageUtils');
          result = await convertImageFile(item.file, type);
       } else if (
         type.startsWith('DOCX_') ||
         type.startsWith('TEXT_') ||
         type.startsWith('PDF_')
       ) {
-        const { convertDocumentFile } = await import('./utils/pdfUtils');
         result = await convertDocumentFile(item.file, type);
       } else if (type.startsWith('DATA_')) {
-        const { convertDataFile } = await import('./utils/dataUtils');
         result = await convertDataFile(item.file, type);
       } else if (type.startsWith('PRESENTATION_')) {
-        const { convertPresentationFile } = await import('./utils/presentationUtils');
         result = await convertPresentationFile(item.file, type);
       } else if (type.startsWith('AUDIO_')) {
-        const { convertAudioFile } = await import('./utils/audioUtils');
         result = await convertAudioFile(item.file, type);
       } else if (type.startsWith('VIDEO_')) {
-        const { convertVideoFile } = await import('./utils/videoUtils');
         result = await convertVideoFile(item.file, type);
       } else if (type.startsWith('MODEL_')) {
-        const { convertModelFile } = await import('./utils/modelUtils');
         result = await convertModelFile(item.file, type);
       } else if (type.startsWith('FONT_')) {
-        const { convertFontFile } = await import('./utils/fontUtils');
         result = await convertFontFile(item.file, type);
       } else {
-        await new Promise(r => setTimeout(r, 1000));
+        // Fallback for types not yet fully implemented in this update
+        await new Promise(r => setTimeout(r, 1000)); // Simulating work
         result = {
           url: URL.createObjectURL(item.file),
           name: `converted_${item.file.name}`,
@@ -281,6 +315,9 @@ export default function App() {
     files.filter(f => f.status === ConversionStatus.IDLE).forEach(f => processConversion(f.id));
   };
 
+  /**
+   * Zips all completed files into a single download archive.
+   */
   const downloadAll = async () => {
     const completedFiles = files.filter(f => f.status === ConversionStatus.COMPLETED);
     if (completedFiles.length === 0) return;
@@ -298,6 +335,7 @@ export default function App() {
 
     setIsZipping(true);
     try {
+      // @ts-ignore - Dynamically loaded to reduce initial bundle size
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
       const promises = completedFiles.map(async (item) => {
@@ -333,6 +371,7 @@ export default function App() {
 
   const globalStatus = getGlobalStatus();
 
+  // Update title based on status
   useEffect(() => {
     document.title = `CoreConvert | ${globalStatus.label}`;
   }, [globalStatus.label]);
@@ -350,6 +389,7 @@ export default function App() {
     }`;
   };
 
+  // Callback to trigger triggerNotification in child components
   const onSuccessClick = useCallback(() => triggerNotification('success'), [triggerNotification]);
 
   const handleModalKeyDown = (e: React.KeyboardEvent) => {
@@ -358,6 +398,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Unsupported File Modal Overlay */}
       {unsupportedFileName && (
         <div 
           ref={modalRef}
@@ -407,6 +448,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Header Bar */}
       <header className="mb-8 md:mb-14 flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
         <a 
           href="#home"
@@ -452,9 +494,11 @@ export default function App() {
         </div>
       </header>
 
+      {/* Routing Logic */}
       {currentView === 'home' && (
         <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-10 items-center justify-center mb-12">
           
+          {/* INPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col" aria-label="Input Files">
             <div className="flex items-center gap-3 mb-3">
               <h2 className="bg-black dark:bg-white text-white dark:text-black px-5 py-1.5 font-black text-lg tracking-[0.15em] uppercase neubrutal-shadow-sm">
@@ -515,6 +559,7 @@ export default function App() {
             </div>
           </section>
 
+          {/* ACTION CENTER */}
           <div className="flex flex-col items-center justify-center py-1 lg:py-0 shrink-0">
              <button 
                onClick={convertAll}
@@ -531,6 +576,7 @@ export default function App() {
              </button>
           </div>
 
+          {/* OUTPUT COLUMN */}
           <section className="w-full max-w-[480px] flex flex-col" aria-label="Output Files">
             <div className="flex items-center gap-3 mb-3 justify-end">
               {completedCount > 1 && (
@@ -616,10 +662,30 @@ export default function App() {
 
           <div className="flex flex-wrap gap-4 md:gap-8 items-center justify-center md:justify-end">
             <nav className="flex gap-2 md:gap-4 items-center justify-center">
-              <button onClick={() => setCurrentView('about')} className={getLinkClass('about')}>About</button>
-              <button onClick={() => setCurrentView('privacy')} className={getLinkClass('privacy')}>Privacy</button>
-              <button onClick={() => setCurrentView('terms')} className={getLinkClass('terms')}>Terms</button>
-              <button onClick={() => setCurrentView('diagnostics')} className={getLinkClass('diagnostics')}>System Check</button>
+              <button 
+                onClick={() => setCurrentView('about')}
+                className={getLinkClass('about')}
+              >
+                About
+              </button>
+              <button 
+                onClick={() => setCurrentView('privacy')}
+                className={getLinkClass('privacy')}
+              >
+                Privacy
+              </button>
+              <button 
+                onClick={() => setCurrentView('terms')}
+                className={getLinkClass('terms')}
+              >
+                Terms
+              </button>
+              <button 
+                onClick={() => setCurrentView('diagnostics')}
+                className={getLinkClass('diagnostics')}
+              >
+                System Check
+              </button>
               <a href="https://github.com/itskiblu/CoreConvert" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-black dark:text-white uppercase hover:underline decoration-2 px-2">GitHub</a>
             </nav>
             <div className="bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow-sm p-2 px-3">
@@ -631,6 +697,7 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Toast Notifications */}
       <div 
         className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"
         role="status" 
