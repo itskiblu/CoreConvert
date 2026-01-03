@@ -5,8 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoreConvert</title>
+    
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
     <link rel="icon" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M0 0H64V64H0ZM12 12V52H52V12ZM20 20H44V44H20Z'/%3E%3C/svg%3E" type="image/svg+xml">
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind is render-blocking but critical; prioritize its fetch -->
+    <script src="https://cdn.tailwindcss.com" fetchpriority="high"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -19,9 +30,7 @@
             }
         }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -74,7 +83,7 @@
             -webkit-text-stroke: 1.5px black;
         }
         .dark .brutal-text-stroke {
-            -webkit-text-stroke: 1.5px black; /* Keep black stroke even in dark mode for yellow pop */
+            -webkit-text-stroke: 1.5px black;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
@@ -97,7 +106,6 @@
             transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
         }
 
-        /* Accessibility: High contrast focus ring for keyboard navigation */
         *:focus-visible {
             outline: 4px solid var(--brutal-border) !important;
             outline-offset: 2px !important;
