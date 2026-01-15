@@ -1,3 +1,4 @@
+
 /**
  * Represents the current lifecycle state of a file within the application.
  * IDLE: File added but not started.
@@ -38,7 +39,7 @@ export type ConversionType =
   // 3D
   | 'MODEL_TO_STL' | 'MODEL_TO_OBJ' | 'MODEL_TO_GLB' | 'MODEL_TO_USDZ' | 'MODEL_TO_IMAGE'
   // Fonts
-  | 'FONT_TO_TTF' | 'FONT_TO_OTF' | 'FONT_TO_WOFF' | 'FONT_TO_JSON' | 'FONT_TO_CSS'
+  | 'FONT_TO_TTF' | 'FONT_TO_OTF' | 'FONT_TO_WOFF' | 'FONT_TO_WOFF2' | 'FONT_TO_JSON' | 'FONT_TO_CSS'
   // Utilities
   | 'PDF_TO_PNG' | 'BASE64_ENCODE' | 'BASE64_DECODE' | 'FILE_TO_ZIP' | 'PASSTHROUGH';
 

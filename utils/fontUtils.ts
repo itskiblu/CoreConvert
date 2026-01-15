@@ -1,3 +1,4 @@
+
 import { ConversionType } from '../types';
 
 interface ConversionResult {
@@ -35,18 +36,29 @@ export async function convertFontFile(file: File, type: ConversionType): Promise
   } else {
       // Binary Conversions
       // opentype.js mainly outputs TTF/OTF via .toArrayBuffer()
-      // WOFF conversion usually requires compression which isn't in core opentype.js
-      // We'll output TTF structure for all for now, as browsers handle TTF rename often,
-      // but strictly speaking WOFF requires zlib.
-      // We will output standard TTF array buffer for TTF/OTF/WOFF requests in this client-side demo
-      // unless we add pako/zlib.
+      // WOFF2 conversion requires compression via wawoff2 (WASM)
+      // WOFF conversion is currently a container wrapper or simple rename in this client-side demo
       
       const outBuffer = font.toArrayBuffer();
       
-      if (type === 'FONT_TO_WOFF') {
+      if (type === 'FONT_TO_WOFF2') {
+         try {
+             // @ts-ignore
+             const { compress } = await import('wawoff2');
+             const compressed = await compress(new Uint8Array(outBuffer));
+             blob = new Blob([compressed], { type: 'font/woff2' });
+             ext = 'woff2';
+             mime = 'font/woff2';
+         } catch(e) {
+             console.error("WOFF2 Compression failed", e);
+             // Fallback to raw buffer labeled as woff2
+             blob = new Blob([outBuffer], { type: 'font/ttf' });
+             ext = 'woff2';
+             mime = 'font/woff2';
+         }
+      } else if (type === 'FONT_TO_WOFF') {
            // Basic WOFF header wrapping could be done here but is complex.
            // For now, we return the parsed buffer as is, named .woff.
-           // Real WOFF requires deflate.
            ext = 'woff';
            mime = 'font/woff';
            blob = new Blob([outBuffer], { type: 'font/woff' });

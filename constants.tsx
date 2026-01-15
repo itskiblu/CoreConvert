@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { ConversionOption } from './types';
 
@@ -159,6 +160,7 @@ export const CONVERSION_OPTIONS: ConversionOption[] = [
   { value: 'FONT_TO_TTF', label: 'Convert to TTF', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_OTF', label: 'Convert to OTF', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_WOFF', label: 'Convert to WOFF', category: 'Font', isSupported: isFont },
+  { value: 'FONT_TO_WOFF2', label: 'Convert to WOFF2', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_JSON', label: 'Extract Glyphs', category: 'Font', isSupported: isFont },
   { value: 'FONT_TO_CSS', label: 'Generate CSS', category: 'Font', isSupported: isFont },
 
