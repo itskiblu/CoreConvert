@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ICONS, CONVERSION_OPTIONS } from '../constants';
 import { convertImageFile } from '../utils/imageUtils';
 import { convertDocumentFile } from '../utils/pdfUtils';
+import { convertFontFile } from '../utils/fontUtils';
 
 interface DiagnosticsContentProps {
   onBack: () => void;
@@ -84,6 +85,34 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
           if (type.includes('CSV')) return new File(['a,b\n1,2'], 'mock.csv', { type: 'text/csv' });
           return new File(['dummy data'], 'mock.dat', { type: 'text/plain' });
       }
+
+      // 4. Font Mocks
+      if (category === 'Font') {
+          try {
+             // @ts-ignore
+             const opentype = (await import('opentype.js')).default || await import('opentype.js');
+             const notdefGlyph = new opentype.Glyph({
+                name: '.notdef',
+                unicode: 0,
+                advanceWidth: 650,
+                path: new opentype.Path()
+            });
+            
+            const font = new opentype.Font({
+                familyName: 'MockFont',
+                styleName: 'Medium',
+                unitsPerEm: 1000,
+                ascender: 800,
+                descender: -200,
+                glyphs: [notdefGlyph]
+            });
+            const buffer = font.toArrayBuffer();
+            return new File([buffer], 'mock.ttf', { type: 'font/ttf' });
+          } catch (e) {
+             console.error("Font mock gen failed", e);
+             return null;
+          }
+      }
       
       // Fallback
       return new File(["dummy content"], 'mock.txt', { type: 'text/plain' });
@@ -148,6 +177,8 @@ export const DiagnosticsContent: React.FC<DiagnosticsContentProps> = ({ onBack }
           type === 'IMAGE_TO_PDF'
         ) {
           result = await convertDocumentFile(mockFile, type);
+        } else if (type.startsWith('FONT_')) {
+          result = await convertFontFile(mockFile, type);
         } else {
           // Simulation for unimplemented types
           await new Promise(r => setTimeout(r, 50)); 
