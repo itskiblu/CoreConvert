@@ -21,6 +21,7 @@ export enum ConversionStatus {
 export type ConversionType = 
   // Images
   | 'IMAGE_TO_PNG' | 'IMAGE_TO_JPG' | 'IMAGE_TO_WEBP' | 'IMAGE_TO_AVIF' | 'IMAGE_TO_SVG' | 'IMAGE_TO_ICO' | 'IMAGE_TO_BMP' | 'IMAGE_TO_GIF' | 'IMAGE_TO_TIFF' | 'IMAGE_TO_CUR' | 'IMAGE_TO_PDF' | 'IMAGE_GRAYSCALE'
+  | 'IMAGE_COMPRESS' | 'IMAGE_COMPRESS_WEBP'
   // Data
   | 'DATA_TO_JSON' | 'DATA_TO_CSV' | 'DATA_TO_TSV' | 'DATA_TO_YAML' | 'DATA_TO_XML' | 'DATA_TO_SQL' | 'DATA_TO_XLSX' | 'DATA_PRETTIFY' | 'DATA_MINIFY'
   // Text & Markdown

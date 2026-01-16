@@ -85,6 +85,8 @@ export const CONVERSION_OPTIONS: ConversionOption[] = [
   { value: 'IMAGE_TO_SVG', label: 'Convert to SVG', category: 'Image', isSupported: isImage },
   { value: 'IMAGE_TO_PDF', label: 'Convert to PDF', category: 'Document', isSupported: isImage },
   { value: 'IMAGE_GRAYSCALE', label: 'Grayscale Filter', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_COMPRESS', label: 'Compress (JPEG 60%)', category: 'Image', isSupported: isImage },
+  { value: 'IMAGE_COMPRESS_WEBP', label: 'Compress (WebP 60%)', category: 'Image', isSupported: isImage },
 
   // --- DATA (Input: JSON, CSV, XML, YAML, TSV, XLSX, SQL) ---
   { value: 'DATA_TO_JSON', label: 'Convert to JSON', category: 'Data', isSupported: isData },

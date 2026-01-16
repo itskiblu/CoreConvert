@@ -1,4 +1,6 @@
 
+
+
 import { ConversionType } from '../types';
 
 /**
@@ -264,8 +266,10 @@ async function loadPsd(file: File): Promise<HTMLCanvasElement> {
 function getTargetFormat(type: ConversionType): { mime: string; ext: string; quality?: number } {
   switch (type) {
     case 'IMAGE_TO_JPG': return { mime: 'image/jpeg', ext: 'jpg', quality: 0.9 };
+    case 'IMAGE_COMPRESS': return { mime: 'image/jpeg', ext: 'jpg', quality: 0.6 };
     case 'IMAGE_TO_PNG': return { mime: 'image/png', ext: 'png' };
     case 'IMAGE_TO_WEBP': return { mime: 'image/webp', ext: 'webp', quality: 0.85 };
+    case 'IMAGE_COMPRESS_WEBP': return { mime: 'image/webp', ext: 'webp', quality: 0.6 };
     case 'IMAGE_TO_AVIF': return { mime: 'image/avif', ext: 'avif', quality: 0.85 };
     case 'IMAGE_TO_BMP': return { mime: 'image/bmp', ext: 'bmp' };
     case 'IMAGE_TO_GIF': return { mime: 'image/gif', ext: 'gif' };
