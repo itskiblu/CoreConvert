@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FileItem, ConversionStatus, ConversionType } from './types';
 import { 
@@ -47,6 +48,7 @@ export default function App() {
   const [isZipping, setIsZipping] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unsupportedFileName, setUnsupportedFileName] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Sync ref with state
   useEffect(() => {
@@ -107,13 +109,12 @@ export default function App() {
   }, [removeNotification]);
 
   /**
-   * Handles incoming files from the file picker.
+   * Universal handler for incoming files (from input or drop)
    */
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []) as File[];
+  const processIncomingFiles = useCallback((incomingFiles: File[]) => {
     const validFiles: FileItem[] = [];
     
-    for (const file of selectedFiles) {
+    for (const file of incomingFiles) {
       const name = file.name.toLowerCase();
       const mime = file.type.toLowerCase();
 
@@ -201,8 +202,37 @@ export default function App() {
     }
 
     setFiles(prev => [...prev, ...validFiles]);
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []) as File[];
+    processIncomingFiles(selectedFiles);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  }, [isDragging]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set to false if we are leaving the main container, not entering a child
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      processIncomingFiles(droppedFiles);
+    }
+  }, [processIncomingFiles]);
 
   const removeFile = useCallback((id: string) => {
     setFiles(prev => {
@@ -495,11 +525,32 @@ export default function App() {
             </div>
             
             <div className="w-full relative pt-[100%]">
-              <div className="absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-3 md:p-4">
+              <div 
+                className={`absolute inset-0 bg-white dark:bg-zinc-900 neubrutal-border neubrutal-shadow flex flex-col p-3 md:p-4 overflow-hidden transition-colors duration-200`}
+              >
                 <div 
-                  className={`flex-1 min-h-0 flex flex-col relative outline-none ${inputFiles.length === 0 ? 'border-[3px] border-dashed border-black/30 dark:border-white/30' : 'border-none'}`}
+                  className={`flex-1 min-h-0 flex flex-col relative outline-none transition-all duration-200 ${
+                    isDragging 
+                    ? 'bg-brutalYellow/10 border-2 border-black dark:border-white border-dashed' 
+                    : inputFiles.length === 0 
+                      ? 'border-[3px] border-dashed border-black/30 dark:border-white/30' 
+                      : 'border-none'
+                  }`}
                   tabIndex={-1}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
+                  {isDragging && (
+                    <div className="absolute inset-0 bg-brutalYellow/95 z-50 flex flex-col items-center justify-center pointer-events-none">
+                       <div className="animate-bounce">
+                           <div className="w-16 h-16 mb-4 mx-auto text-black border-4 border-black p-2"><ICONS.Upload /></div>
+                       </div>
+                       <p className="text-3xl font-black text-black uppercase tracking-tighter">Drop Files</p>
+                    </div>
+                  )}
+
                   <input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" aria-hidden="true" />
                   
                   {inputFiles.length === 0 ? (
