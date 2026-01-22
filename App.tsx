@@ -25,6 +25,7 @@ import { convertModelFile } from './utils/modelUtils';
 import { convertFontFile } from './utils/fontUtils';
 
 import { ConversionCard } from './components/ConversionCard';
+import { BatchSelector } from './components/BatchSelector';
 import { PrivacyContent } from './components/PrivacyContent';
 import { TermsContent } from './components/TermsContent';
 import { AboutContent } from './components/AboutContent';
@@ -246,6 +247,24 @@ export default function App() {
   const updateFileType = useCallback((id: string, type: ConversionType) => {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, type } : f));
   }, []);
+
+  const handleBatchSelect = useCallback((type: ConversionType) => {
+    let appliedCount = 0;
+    const option = CONVERSION_OPTIONS.find(o => o.value === type);
+    
+    setFiles(prev => prev.map(f => {
+      // Only update IDLE files that support this format
+      if (f.status === ConversionStatus.IDLE && option?.isSupported(f.file)) {
+        appliedCount++;
+        return { ...f, type };
+      }
+      return f;
+    }));
+
+    if (appliedCount === 0) {
+      triggerNotification('alert');
+    }
+  }, [triggerNotification]);
 
   /**
    * Core Logic Switch.
@@ -545,7 +564,7 @@ export default function App() {
                   {isDragging && (
                     <div className="absolute inset-0 bg-brutalYellow/95 z-50 flex flex-col items-center justify-center pointer-events-none">
                        <div className="animate-bounce">
-                           <div className="w-16 h-16 mb-4 mx-auto text-black border-4 border-black p-2"><ICONS.Upload /></div>
+                           <div className="w-16 h-16 mb-4 mx-auto text-black border-4 border-black flex items-center justify-center"><ICONS.Upload /></div>
                        </div>
                        <p className="text-3xl font-black text-black uppercase tracking-tighter">Drop Files</p>
                     </div>
@@ -567,7 +586,7 @@ export default function App() {
                     </button>
                   ) : (
                     <div className="flex flex-col h-full overflow-hidden">
-                      <div className="shrink-0 mb-3 px-2 py-2">
+                      <div className="shrink-0 mb-3 px-2 pt-2 space-y-2">
                         <button 
                           onClick={() => fileInputRef.current?.click()}
                           className="w-full flex items-center justify-center gap-2 p-2.5 bg-brutalYellow text-black neubrutal-border neubrutal-shadow-sm neubrutal-button-active cursor-pointer outline-none"
@@ -577,6 +596,9 @@ export default function App() {
                           </div>
                           <span className="font-black text-xs uppercase tracking-widest leading-none">Add More Files</span>
                         </button>
+                        {inputFiles.length > 1 && (
+                            <BatchSelector onSelect={handleBatchSelect} files={inputFiles} />
+                        )}
                       </div>
                       <ul className="flex-1 min-h-0 px-2 pb-3 space-y-3 overflow-y-auto custom-scrollbar list-none m-0">
                         {inputFiles.map(item => (
